@@ -7,6 +7,7 @@
         <h1>{{ recipename }}</h1>
     </div>
   </div>
+  <button @click="greet">Oida</button>
 </template>
 
 <script>
@@ -16,6 +17,13 @@ export default {
     return {
     recipename: "Test Oida",
     testimg: "http://alpakagott/assets/chonkerwisdom.webp"};
+  },
+  methods:{
+    greet(recipe){
+      this.recipename = "Bam Oida";
+      console.log(this);
+      console.log(recipe);
+    }
   }
 }
 </script>
