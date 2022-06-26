@@ -1,9 +1,6 @@
 <template>
-    <div @click="$emit('show-recipe', card)" class="rezeptkarte row border-bottom">
-        <div class="d-flex flex-wrap align-items-center h-100 col-3">
-            <img :src="card.image" alt="Bildchen" @error="imgerr" class="w-100 m-auto img-responsive rounded"/>
-        </div>
-        <div class="h-100 col-6">
+    <div @click="$emit('show-recipe', card)" class="rezeptkarte d-flex border-bottom">
+        <div class="h-100 flex-grow-1">
             <h3>{{ card.title }}</h3>
             <div class="d-inline">
                 <div v-for="badge in card.badges" v-bind:key="badge" class="badge rounded-pill mx-1" :class="badge.class">
@@ -11,6 +8,9 @@
                 </div>
             </div>
             <p>{{ card.description }}</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center h-100 mw-25">
+            <img :src="card.image" alt="Bildchen" @error="imgerr" class="w-100 m-auto img-responsive rounded"/>
         </div>
     </div>
 </template>

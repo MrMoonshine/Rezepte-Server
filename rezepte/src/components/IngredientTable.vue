@@ -15,11 +15,11 @@
             </tr>
         </tbody>
     </table>
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between d-print-none">
         <label class="fw-bold">Portionen:</label>
         <div class="btn-group">
             <button @click="alterAmount(-1)" class="btn btn-primary"><b>-</b></button>
-            <input :value="calcamount" type="text" class="disabled btn border rounded-0 border-primary"/>
+            <button class="disabled btn btn-light border rounded-0 border-primary">{{ calcamount }}</button>
             <button @click="alterAmount(1)" class="btn btn-primary"><b>+</b></button>
         </div>
     </div>

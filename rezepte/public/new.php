@@ -318,8 +318,11 @@ while (strlen($edit) == 0 && file_exists($filename . ".json"))
 {
     // just slap copy on filename lol
     echo ($filename . " already exists. renaming...<br>");
-    $filename .= "_copy";
+    $filename .= " Kopie";
+    // Den Rezept namen auch ändern
+    $rezept['title'] .= " Kopie";
 }
+
 $filename .= ".json";
 // pwd
 //echo getcwd();

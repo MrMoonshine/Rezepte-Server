@@ -1,28 +1,31 @@
 <template>
-    <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige d-block">
-    <div class="">
-      <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded img-thumbnail w-100"/>
+    <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige d-block d-print-block">
+    <div class="d-flex justify-content-center align-items-center">
+        <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded w-75"/>
     </div>
     <div class="flex-grow-1 mx-2">
-      <h1 class="text-primary">{{ recipe.data.title }}</h1>
-      <h3>Für {{ recipe.data.amount }} Personen</h3>
-      <p>{{ recipe.data.description }}</p>
-      <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients" />
-      <div class="d-flex flex-wrap justify-content-between">
-        <button class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
-        <button class="btn btn-warning flex-fill m-2">Bearbeiten</button>
-        <button class="btn btn-danger flex-fill m-2">Löschen</button>
-      </div>
+        <div class="d-flex justify-content-between">
+            <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
+            <button @click="displayed_recipe = []" type="button" class="btn-close" aria-label="Close"></button>
+        </div>
+        <h3>Für {{ recipe.data.amount }} Personen</h3>
+        <p>{{ recipe.data.description }}</p>
+        <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients" />
+        <div class="d-flex flex-wrap justify-content-between d-print-none">
+            <button @click="printPage" class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
+            <a :href="recipe.edit_link" class="btn btn-warning flex-fill m-2">Bearbeiten</a>
+            <a :href="recipe.delete_link" class="btn btn-danger flex-fill m-2">Löschen</a>
+        </div>
     </div>
   </div>
     <!--Search-->
-    <div class="d-block">
-        <label for="rezeptsuche">Such was Oida</label>
-        <input type="search" id="rezeptsuche" placeholder="Rezept Suchen" class="form-control border border-primary"/>
+    <div class="d-block d-print-none mb-3">
+        <label for="rezeptsuche" class="fw-bold">Einfache Suche</label>
+        <input @input="basic_search" type="search" id="rezeptsuche" placeholder="Rezept Suchen" class="form-control border border-primary"/>
     </div>
-    <div class="d-block">
+    <div class="d-block d-print-none">
         <!--Foreach Recipe: Create a selection card-->
-        <RecipeCard v-for="recipe in recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>
+        <RecipeCard v-for="recipe in matching_recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>
     </div>
 </template>
 
@@ -38,7 +41,6 @@ class Recipe{
     constructor(json_string){
         this.data = JSON.parse(json_string);
         this.card_description = this.data.description.substring(0,100) + "...";
-        this.data.description = window.marked.parse(this.data.description);
         this.card_tags = [];
         // Tag Glutenfrei
         if(this.data.glutenFree){
@@ -59,16 +61,26 @@ class Recipe{
             description: this.card_description,
             badges: this.card_tags
         };
+
+        // Edit Link
+        this.edit_link = "/rezepte/rezepte/dist/new.php?edit=" + this.data.title + ".json";
+        // Delete Link
+        this.delete_link = "/rezepte/rezepte/dist/delete.php?filename=" + this.data.title + ".json";
+
         //console.table(this.data.ingredients);
     }
 
     match(criteria = null){
+        console.log(criteria);
         if(criteria == null){
             return true;
         }
 
         if(criteria.search){
-            return this.data.title.includes(criteria.search);
+            if(criteria.search.length == 0){
+                return true;
+            }
+            return this.data.title.toUpperCase().includes(criteria.search.toUpperCase());
         }
         return true;
     }
@@ -84,6 +96,7 @@ export default {
     return {
         displayed_recipe: [],
         recipes: [],
+        matching_recipes: [],
         items: [{ message: 'Foo' }, { message: 'Bar' }]
     };
   },
@@ -100,7 +113,19 @@ export default {
             xhr.send(null);
             this.recipes.push(new Recipe(xhr.responseText));
         }
+
+        this.matching_recipes = [...this.recipes];
         //console.log(this.recipes);
+    },
+    basic_search(para){
+        console.log(para.target.value);
+        this.matching_recipes = [];
+        for(let i of this.recipes){
+            if(i.match({search: para.target.value})){
+                console.log(i.data.title + " matches!");
+                this.matching_recipes.push(i);
+            }
+        }
     },
     display_match(card){
         // empty array
@@ -118,6 +143,15 @@ export default {
     imgerr(para){
         console.log("Hiding image");
         para.target.className = "d-none";
+    },
+
+    printPage(){
+        console.log("Printing");
+        if(window.print){
+            window.print();
+        }else{
+            alert("Dein browser kann nicht drucken!");
+        }
     }
   },
     beforeMount(){

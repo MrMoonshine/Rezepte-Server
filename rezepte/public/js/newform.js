@@ -293,7 +293,7 @@ function showReplaceInfo(show){
 function resetForm(){
     document.getElementById("replacerec").innerHTML = "";
     document.getElementById("ingredientSpace").innerHTML = "";
-    document.getElementById("portionen").value = 1;
+    document.getElementsByName("portionen")[0].value = 1;
     unsetValidation();
 
     //Is an imge selected?
@@ -313,7 +313,7 @@ function fillExistingForm(filename,robj){
     showReplaceInfo(true);
 
     document.getElementById("rezeptname").value = robj.title;
-    document.getElementById("portionen").value = robj.amount;
+    document.getElementsByName("portionen")[0].value = robj.amount;
 
     if(robj.glutenFree){
         document.getElementById("glutenfrei").checked = true;
