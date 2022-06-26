@@ -1,28 +1,36 @@
 <template>
+    <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige d-block">
+    <div class="">
+      <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded img-thumbnail w-100"/>
+    </div>
+    <div class="flex-grow-1 mx-2">
+      <h1 class="text-primary">{{ recipe.data.title }}</h1>
+      <h3>Für {{ recipe.data.amount }} Personen</h3>
+      <p>{{ recipe.data.description }}</p>
+      <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients" />
+      <div class="d-flex flex-wrap justify-content-between">
+        <button class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
+        <button class="btn btn-warning flex-fill m-2">Bearbeiten</button>
+        <button class="btn btn-danger flex-fill m-2">Löschen</button>
+      </div>
+    </div>
+  </div>
+    <!--Search-->
     <div class="d-block">
         <label for="rezeptsuche">Such was Oida</label>
         <input type="search" id="rezeptsuche" placeholder="Rezept Suchen" class="form-control border border-primary"/>
     </div>
-    <button @click="loadAll" class="btn btn-primary">Oida</button>
-    <div class="rezeptkarte d-block">
-        <div v-for="recipe in recipes" v-bind:key="recipe" class="row border-bottom">
-            <div class="col-3 text-center">
-                <img v-bind:src="recipe.data.imageurl" alt="Bildchen" class="my-2 h-75 img-responsive rounded img-thumbnail"/>
-            </div>
-            <div class="col-6">
-                <h3>{{ recipe.data.title }}</h3>
-                <div class="d-inline">
-                    <div v-for="badge in recipe.card_tags" v-bind:key="badge" class="badge rounded-pill mx-1" :class="badge.class">
-                        {{ badge.label }}
-                    </div>
-                </div>
-                <p>{{ recipe.card_description }}</p>
-            </div>
-        </div>
+    <div class="d-block">
+        <!--Foreach Recipe: Create a selection card-->
+        <RecipeCard v-for="recipe in recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>
     </div>
 </template>
 
 <script>
+// Import Cards
+import RecipeCard from './RecipeCard.vue'
+import IngredientTable from './IngredientTable.vue'
+
 const RECIPE_BASE_PATH = "/rezepte/backend/files/";
 const RECIPE_BASE_URL = "http://" + location.hostname + RECIPE_BASE_PATH;
 
@@ -40,22 +48,41 @@ class Recipe{
             this.card_tags.push({label: this.data.estimatedTime, class: "text-bg-danger"});
         }
         // Tag Art
-        if(this.data.estimatedTime){
+        if(this.data.foodtype){
             this.card_tags.push({label: this.data.foodtype, class: "text-bg-primary"});
         }
 
-        //console.log(this);
+        this.card_data = {
+            title: this.data.title,
+            image: this.data.imageurl,
+            description: this.card_description,
+            badges: this.card_tags
+        };
+
+        console.table(this.data.ingredients);
     }
 
-    get match(){
+    match(criteria = null){
+        if(criteria == null){
+            return true;
+        }
+
+        if(criteria.search){
+            return this.data.title.includes(criteria.search);
+        }
         return true;
     }
 }
 
 export default {
   name: 'RecipeSearch',
+  components:{
+    RecipeCard,
+    IngredientTable
+  },
   data(){
     return {
+        displayed_recipe: [],
         recipes: [],
         items: [{ message: 'Foo' }, { message: 'Bar' }]
     };
@@ -75,21 +102,34 @@ export default {
         }
         //console.log(this.recipes);
     },
-    // Don't display Images at recipes which havent one configured
-    hideOnError(event){
-        console.log(event.target);
-        event.target.src = "http://alpakagott/assets/backgrounds/2b.webp";
+    display_match(card){
+        // empty array
+        this.displayed_recipe.length = 0;
+        // match
+        for(let i of this.recipes){
+            if(i.data.title == card.title){
+                this.displayed_recipe.push(i);
+            }
+        }
+        // Scroll to top
+        window.scrollTo(0, 0);
+    },
+    // Hide image if none exists
+    imgerr(para){
+        console.log("Hiding image");
+        para.target.className = "d-none";
     }
-  }
+  },
+    beforeMount(){
+        this.loadAll();
+    }
 }
 </script>
 
 <style>
-.rezeptkarte{
-    height: 12rem !important;
-}
-
-img{
-    object-fit: cover !important;
+.rezeptanzeige img{
+    object-fit: cover;
+    max-width: 32rem;
+    max-height: 24rem;
 }
 </style>
