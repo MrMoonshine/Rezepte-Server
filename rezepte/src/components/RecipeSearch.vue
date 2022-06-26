@@ -38,6 +38,7 @@ class Recipe{
     constructor(json_string){
         this.data = JSON.parse(json_string);
         this.card_description = this.data.description.substring(0,100) + "...";
+        this.data.description = window.marked.parse(this.data.description);
         this.card_tags = [];
         // Tag Glutenfrei
         if(this.data.glutenFree){
