@@ -2,10 +2,11 @@
 // Prevent warning in browser
 header('Content-type: text/javascript');
 // Create Array
-echo("window.recipe_files = [");
 $dispname;
 $fnarr = array();
-$base_path = "/var/www/rezepte/backend/files/";
+$base_path = "/var/www/Rezepte-Server/assets/";
+
+echo("window.recipe_files = [");
 foreach(glob($base_path."*.json") as $filename) {
     $dispname = substr($filename, strlen($base_path));
     $dispname = substr($dispname, 0, -5);

@@ -31,7 +31,7 @@
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
 
-const RECIPE_BASE_PATH = "/rezepte/backend/files/";
+const RECIPE_BASE_PATH = "/rezepte/assets/";
 const RECIPE_BASE_URL = "http://" + location.hostname + RECIPE_BASE_PATH;
 
 class Recipe{
@@ -58,8 +58,7 @@ class Recipe{
             description: this.card_description,
             badges: this.card_tags
         };
-
-        console.table(this.data.ingredients);
+        //console.table(this.data.ingredients);
     }
 
     match(criteria = null){
