@@ -1,4 +1,6 @@
 <template>
+    <button @click="showForm" class="btn btn-success"><b>+</b> Neues Rezept</button>
+    <RecipeNew ref="newform" />
     <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige d-block d-print-block">
     <div class="d-flex justify-content-center align-items-center">
         <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded w-75"/>
@@ -6,11 +8,11 @@
     <div class="flex-grow-1 mx-2">
         <div class="d-flex justify-content-between">
             <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
-            <button @click="displayed_recipe = []" type="button" class="btn-close" aria-label="Close"></button>
+            <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
         </div>
         <h3>Für {{ recipe.data.amount }} Personen</h3>
         <p>{{ recipe.data.description }}</p>
-        <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients" />
+        <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
         <div class="d-flex flex-wrap justify-content-between d-print-none">
             <button @click="printPage" class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
             <a :href="recipe.edit_link" class="btn btn-warning flex-fill m-2">Bearbeiten</a>
@@ -33,6 +35,7 @@
 // Import Cards
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
+import RecipeNew from './RecipeNew.vue'
 
 const RECIPE_BASE_PATH = "/rezepte/assets/";
 const RECIPE_BASE_URL = "http://" + location.hostname + RECIPE_BASE_PATH;
@@ -90,7 +93,8 @@ export default {
   name: 'RecipeSearch',
   components:{
     RecipeCard,
-    IngredientTable
+    IngredientTable,
+    RecipeNew
   },
   data(){
     return {
@@ -152,6 +156,9 @@ export default {
         }else{
             alert("Dein browser kann nicht drucken!");
         }
+    },
+    showForm(){
+        this.$refs.newform.showForm();
     }
   },
     beforeMount(){
