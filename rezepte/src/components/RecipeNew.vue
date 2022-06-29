@@ -3,7 +3,7 @@
         <div class="recipe-form-new w-100 p-4 overflow-auto shadow-lg rounded bg-light position-absolute top-50 start-50 translate-middle">
             <div class="d-flex justify-content-between">
                 <h1 class="text-primary flex-grow-1">Neues Rezept</h1>
-                <button @click="show = false" type="button" class="btn-close mt-2" aria-label="Close" />
+                <button @click="hideForm" type="button" class="btn-close mt-2" aria-label="Close" />
             </div>
             <form class="d-print-none" action="rezepte/dist/new.php" method="POST" enctype="multipart/form-data">
                 <div class="row gy-2 gx-3 align-items-center">
@@ -26,22 +26,17 @@
                     </div>
                     <div class="col-auto">
                         <label for="speiseartsel" class="form-label">Speiseart</label>
-                        <input class="d-none" type="text" id="speiseart" name="speiseart" readonly/>
+                        <input :value="foodtype" class="d-none" type="text" name="speiseart" readonly/>
                         <br>
                         <div id="speiseartsel" class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                            <button id="speiseartselmain" type="button" class="btn btn-primary">Auswählen</button>
+                            <button id="speiseartselmain" type="button" class="btn btn-primary">{{ foodtypedisplay }}</button>
                             <div class="btn-group" role="group">
                                 <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                    <button class="dropdown-item" type="button">Vorspeise</button>
-                                    <button class="dropdown-item" type="button">Suppe</button>
-                                    <button class="dropdown-item" type="button">Salat</button>
-                                    <button class="dropdown-item" type="button">Hauptspeise</button>
-                                    <button class="dropdown-item" type="button">Nachspeise</button>
-                                    <button class="dropdown-item" type="button">Mehlspeise</button>
+                                    <button @click="setFoodType" v-for="foodtype_i in foodtypes" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i }}</button>
                                     <span><hr class="dropdown-divider"></span>
-                                    <button class="dropdown-item" type="button">Cocktail</button>
+                                    <button @click="setFoodType" class="dropdown-item" type="button">Cocktail</button>
                                 </div>
                             </div>
                         </div>
@@ -89,7 +84,7 @@
                             id="bildURL"
                             name="bildURL"
                             placeholder="Bildadresse"
-                            value=""
+                            :value="iamgeurl"
                         />
                         <div id="bildURLHelp" class="form-text">Wo ist dein Bild?</div>
                     </div>
@@ -100,6 +95,7 @@
                             type="file"
                             id="bild"
                             name="bild"
+                            @change="setImageUrlInput"
                             accept="image/*"
                             data-classIcon="icon-plus"
                             data-buttonText="Your label here."
@@ -131,8 +127,12 @@ export default {
   name: 'NewRecipe',
   data(){
     return {
-        show: true,
-        ingredients: []
+        show: false,
+        ingredients: [],
+        iamgeurl: "",
+        foodtypes: ["Vorspeise", "Suppe", "Salat", "Hauptspeise", "Nachspeise", "Mehlspeise"],
+        foodtype: "",
+        foodtypedisplay:"Auswählen"
     };
   },
   components:{
@@ -145,7 +145,12 @@ export default {
     showForm(){
         // Empty ingredients
         this.ingredients.length = 0;
+        document.getElementsByTagName("body")[0].classList.add("overflow-hidden");
         this.show = true;
+    },
+    hideForm(){
+        document.getElementsByTagName("body")[0].classList.remove("overflow-hidden");
+        this.show = false;
     },
     resetForm(){
         this.ingredients.length = 0;
@@ -153,6 +158,14 @@ export default {
     newIngredient(){
         // Arbitrary value to generate a given amount of ingredients
         this.ingredients.push(1);
+    },
+    setImageUrlInput(para){
+        //console.log(para.target.files);
+        this.iamgeurl = "http://" + window.location.hostname + "/rezepte/assets/images/" + para.target.files[0].name;
+    },
+    setFoodType(para){
+        this.foodtype = para.target.innerHTML;
+        this.foodtypedisplay = this.foodtype;
     }
   }
 }

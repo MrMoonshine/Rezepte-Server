@@ -2,30 +2,21 @@
     <div v-if="show" class="d-flex justify-content-between pb-2 border-bottom">
         <div class="d-block">
             <label class="form-label">Zutat</label>
-            <input class="form-control  border-primary" type="text" name="zutat[]" required="" />
+            <input class="form-control  border-primary" type="text" name="zutat[]" :value="ingcname" required />
         </div>
         <div class="d-block">
             <label class="form-label">Menge</label>
-            <input class="form-control border-primary" type="number" name="menge[]" min="0" step="0.1">
+            <input class="form-control border-primary" type="number" name="menge[]" :value="ingcamount" min=0 step=0.1 />
         </div>
             <div class="d-block">
-            <input class="d-none" name="einheit[]">
             <label class="form-label">Einheit</label><br>
+            <input type="text" name="einheit[]" class="d-none" :value="unit" readonly />
             <div class="btn-group">
-                <input type="button" class="btn btn-primary" value="g">
+                <button type="button" class="btn btn-primary">{{ unit }}</button>
                 <div class="btn-group">
                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"></button>
                     <div class="dropdown-menu dropdown-menu-dark">
-                        <button type="button" class="dropdown-item">g</button>
-                        <button type="button" class="dropdown-item">kg</button>
-                        <button type="button" class="dropdown-item">l</button>
-                        <button type="button" class="dropdown-item">ml</button>
-                        <button type="button" class="dropdown-item">Esslöffel</button>
-                        <button type="button" class="dropdown-item">Teelöffel</button>
-                        <button type="button" class="dropdown-item">prise</button>
-                        <button type="button" class="dropdown-item">Stück</button>
-                        <button type="button" class="dropdown-item">Packung</button>
-                        <button type="button" class="dropdown-item">Scheibe</button>
+                        <button v-for="unit_t in units_t" v-bind:key="unit_t" @click="setUnit" type="button" class="dropdown-item">{{ unit_t }}</button>
                     </div>
                 </div>
             </div>
@@ -43,13 +34,21 @@ export default {
   name: 'RecipeNewingredient',
   data(){
     return {
-        show: true
+        show: true,
+        ingcname: "",
+        ingcamount: 0,
+        unit: "g",
+        units_t: ["g", "kg", "l", "ml", "Esslöffel", "Teelöffel", "Prise", "Stück", "Packung", "Scheibe"]
     };
   },
   props: {
 
   },
   methods:{
+      setUnit(para){
+        console.log(para);
+        this.unit = para.target.innerHTML;
+      }
   }
 }
 </script>

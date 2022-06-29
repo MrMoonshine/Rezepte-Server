@@ -31,36 +31,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">
     </script>
-<?php
-/*
-E D I T I N G
-
-*/
-if (strlen($edit) > 0)
-{
-    $erurl = "http://alpakagott/rezepte/assets/" . $edit;
-    echo ("<script>");
-    echo ("editRecipeURL='" . $erurl . "';\n");
-    echo ("</script>");
-}
-?>
-   <script>
-        // Form Handling
-        if(editRecipeURL.length > 0){
-            // Name must not be altered
-            document.getElementById("rezeptname").readonly = true;
-            // Get JSON DATA
-            var xhr = new XMLHttpRequest();
-            xhr.open( "GET", editRecipeURL, true ); 
-            xhr.send( null );
-            xhr.addEventListener("loadend", function(event){
-                var robj = JSON.parse(this.responseText);
-                fillExistingForm(editRecipeURL.replace("http://" + window.location + "/rezepte/assets/",""), robj);
-            });
-        }
-    </script>
 </body>
 <?php
+var_dump($_POST);
 $filepath = "/var/www/Rezepte-Server/assets/";
 /*
 C R E A T I N G
