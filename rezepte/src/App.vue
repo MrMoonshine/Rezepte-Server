@@ -1,5 +1,4 @@
 <template>
-  <RecipeDisplay :items="items" />
   <RecipeSearch />
 </template>
 

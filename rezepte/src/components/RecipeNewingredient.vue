@@ -2,11 +2,11 @@
     <div v-if="show" class="d-flex justify-content-between pb-2 border-bottom">
         <div class="d-block">
             <label class="form-label">Zutat</label>
-            <input class="form-control  border-primary" type="text" name="zutat[]" :value="ingcname" required />
+            <input v-model="name" class="form-control  border-primary" type="text" name="zutat[]" required />
         </div>
         <div class="d-block">
             <label class="form-label">Menge</label>
-            <input class="form-control border-primary" type="number" name="menge[]" :value="ingcamount" min=0 step=0.1 />
+            <input v-model="amount" class="form-control border-primary" type="number" name="menge[]" min=0 step=0.1 />
         </div>
             <div class="d-block">
             <label class="form-label">Einheit</label><br>
@@ -35,19 +35,37 @@ export default {
   data(){
     return {
         show: true,
-        ingcname: "",
-        ingcamount: 0,
+        name: "",
+        amount: 0,
         unit: "g",
         units_t: ["g", "kg", "l", "ml", "Esslöffel", "Teelöffel", "Prise", "Stück", "Packung", "Scheibe"]
     };
   },
   props: {
-
+    ingredient: {
+        name: String,
+        amount: Number,
+        unit: String
+    }
   },
   methods:{
       setUnit(para){
-        console.log(para);
+        //console.log(para);
         this.unit = para.target.innerHTML;
+      }
+  },
+  created(){
+      // Values, if defined
+      if(this.ingredient.name){
+          this.name = this.ingredient.name;
+      }
+
+    if(this.ingredient.amount){
+        this.amount = this.ingredient.amount;
+      }
+
+      if(this.ingredient.unit){
+          this.unit = this.ingredient.unit;
       }
   }
 }

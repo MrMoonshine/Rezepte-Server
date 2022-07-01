@@ -2,24 +2,25 @@
     <button @click="showForm" class="btn btn-success"><b>+</b> Neues Rezept</button>
     <RecipeNew ref="newform" />
     <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige d-block d-print-block">
-    <div class="d-flex justify-content-center align-items-center">
-        <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded w-75"/>
-    </div>
-    <div class="flex-grow-1 mx-2">
-        <div class="d-flex justify-content-between">
-            <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
-            <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
+        <DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />
+        <div class="d-flex justify-content-center align-items-center">
+            <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded w-75"/>
         </div>
-        <h3>Für {{ recipe.data.amount }} Personen</h3>
-        <p>{{ recipe.data.description }}</p>
-        <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
-        <div class="d-flex flex-wrap justify-content-between d-print-none">
-            <button @click="printPage" class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
-            <a :href="recipe.edit_link" class="btn btn-warning flex-fill m-2">Bearbeiten</a>
-            <a :href="recipe.delete_link" class="btn btn-danger flex-fill m-2">Löschen</a>
+        <div class="flex-grow-1 mx-2">
+            <div class="d-flex justify-content-between">
+                <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
+                <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
+            </div>
+            <h3>Für {{ recipe.data.amount }} Personen</h3>
+            <p>{{ recipe.data.description }}</p>
+            <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
+            <div class="d-flex flex-wrap justify-content-between d-print-none">
+                <button @click="printPage" class="btn btn-info w-100 p-2 m-2">Ausdrucken</button>
+                <button @click="edit_recipe(recipe)" class="btn btn-warning flex-fill m-2">Bearbeiten</button>
+                <button @click="show_delete_modal = true" class="btn btn-danger flex-fill m-2">Löschen</button>
+            </div>
         </div>
     </div>
-  </div>
     <!--Search-->
     <div class="d-block d-print-none mb-3">
         <label for="rezeptsuche" class="fw-bold">Einfache Suche</label>
@@ -36,6 +37,7 @@
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
 import RecipeNew from './RecipeNew.vue'
+import DeleteModal from './DeleteModal.vue'
 
 const RECIPE_BASE_PATH = "/rezepte/assets/";
 const RECIPE_BASE_URL = "http://" + location.hostname + RECIPE_BASE_PATH;
@@ -65,10 +67,8 @@ class Recipe{
             badges: this.card_tags
         };
 
-        // Edit Link
-        this.edit_link = "/rezepte/rezepte/dist/new.php?edit=" + this.data.title + ".json";
         // Delete Link
-        this.delete_link = "/rezepte/rezepte/dist/delete.php?filename=" + this.data.title + ".json";
+        this.delete_link = "http://"+location.hostname+"/rezepte/rezepte/dist/delete.php?filename=" + this.data.title + ".json";
 
         //console.table(this.data.ingredients);
     }
@@ -94,14 +94,16 @@ export default {
   components:{
     RecipeCard,
     IngredientTable,
-    RecipeNew
+    RecipeNew,
+    DeleteModal
   },
   data(){
     return {
         displayed_recipe: [],
         recipes: [],
         matching_recipes: [],
-        items: [{ message: 'Foo' }, { message: 'Bar' }]
+        items: [{ message: 'Foo' }, { message: 'Bar' }],
+        show_delete_modal: false
     };
   },
   methods:{
@@ -134,6 +136,8 @@ export default {
     display_match(card){
         // empty array
         this.displayed_recipe.length = 0;
+        // hide delete modal:
+        this.show_delete_modal = false;
         // match
         for(let i of this.recipes){
             if(i.data.title == card.title){
@@ -142,6 +146,9 @@ export default {
         }
         // Scroll to top
         window.scrollTo(0, 0);
+    },
+    edit_recipe(rec){
+        this.$refs.newform.showFormEdit(rec);
     },
     // Hide image if none exists
     imgerr(para){

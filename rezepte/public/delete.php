@@ -3,9 +3,8 @@
     if(isset($_GET['filename'])){
         $deletepath = $_GET['filename'];
         unlink($filepath.$deletepath);
-        echo "<h1>Deleteing:</h1><p>".$deletepath."</p>";
+        echo("Das rezept wurde gelöscht! \n".$filepath.$deletepath);
     }else{
-        echo "<h1>No Delete Path Set</h1>";
+        echo "Kein Rezept zum Löschen angegeben!";
     }
 ?>
-<a href="/rezepte">Back</a>
