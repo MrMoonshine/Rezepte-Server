@@ -1,10 +1,19 @@
 # Rezepte-Server
 Ein Webserver um Rezepte zu Speichern und Mengen ggf. umzurechenen. 
 
+Was kann die Website?
+- Rezepte werden im *Handyformat* angezeigt und können dort umgerechnet werden
+- Pezepte ausdrucken
+- Einfache Suche
+- Advanced Suche
+  - Dort kann man nach Zutaten, Zubereitungszeit, Speiseart, etc filtern.
+
 # Backend
 Aus "Ich lerne PHP für die Schule" wird over engineered garbage.
 
 Style wird mit Bootstrap gemacht und das frontend mit VUE.
+
+Rezepte werdein in JSON files gespeichert anstatt einer Datenbank. Da der Server für einen Raspberry Pi konzepiert ist, müssen die Rezepte leicht zum exportieren/importieren sein (Tote SD Katre oder Raspberry passiert schnell ⚰️). Zusätzlich muss man sich nicht um Collations kümmern.
 
 # Installation
 
@@ -42,4 +51,4 @@ Die seite ist nun hier erreichbar:
 
 `http://<host>/rezepte/`
 
-Für HTTPs müssen im code die XHR requests ausgebessert werden.
+HTTPs geht auch wenn es am Apache kanfiguriert ist.
