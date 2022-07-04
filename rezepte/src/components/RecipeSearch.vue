@@ -47,7 +47,7 @@ import DeleteModal from './DeleteModal.vue'
 import AdvancedSearch from './AdvancedSearch.vue'
 
 const RECIPE_BASE_PATH = "/rezepte/assets/";
-const RECIPE_BASE_URL = "http://" + location.hostname + RECIPE_BASE_PATH;
+const RECIPE_BASE_URL = window.location.protocol + "//" + window.location.hostname + RECIPE_BASE_PATH;
 
 class Recipe{
     constructor(json_string){
@@ -75,7 +75,7 @@ class Recipe{
         };
 
         // Delete Link
-        this.delete_link = "http://"+location.hostname+"/rezepte/rezepte/dist/delete.php?filename=" + this.data.title + ".json";
+        this.delete_link = location.protocol + "//" + location.hostname + "/rezepte/rezepte/dist/delete.php?filename=" + this.data.title + ".json";
 
         //console.table(this.data.ingredients);
     }

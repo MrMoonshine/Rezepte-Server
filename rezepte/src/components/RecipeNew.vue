@@ -223,7 +223,7 @@ export default {
     },
     setImageUrlInput(para){
         console.log(para.target.files);
-        this.reimgaddr = "http://" + window.location.hostname + "/rezepte/assets/images/" + para.target.files[0].name;
+        this.reimgaddr = window.location.protocol + "//" + window.location.hostname + "/rezepte/assets/images/" + para.target.files[0].name;
     },
     setFoodType(para){
         this.foodtype = para.target.innerHTML;
