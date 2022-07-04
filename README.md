@@ -32,7 +32,7 @@ Klonen:
 
 `git clone https://github.com/MrMoonshine/Rezepte-Server.git`
 
-Apache Ko0nfigurieren:
+Apache Konfigurieren:
 ```bash
 cd Rezepte-Server
 # Für Debian
