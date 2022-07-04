@@ -1,7 +1,7 @@
 <template>
     <div v-if="show" class="position-absolute recipe-form-shadow w-100 top-0 start-0">
         <div class="recipe-form-new w-100 p-4 overflow-auto shadow-lg rounded bg-light position-absolute top-50 start-50 translate-middle">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between d-print none">
                 <h1 class="text-primary flex-grow-1">Neues Rezept</h1>
                 <button @click="hideForm" type="button" class="btn-close mt-2" aria-label="Close" />
             </div>
@@ -140,7 +140,7 @@ export default {
         show: false,
         edit_mode: false,
         ingredients: [],
-        foodtypes: ["Vorspeise", "Suppe", "Salat", "Hauptspeise", "Nachspeise", "Mehlspeise"],
+        foodtypes: window.foodtypes,
         foodtype: "",
         foodtypedisplay:"Auswählen",
         rename: "",

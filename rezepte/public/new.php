@@ -100,21 +100,12 @@ $jsonstr = json_encode($rezept);
 // Filehandling
 $filename = $filepath . $rezept['title'];
 
-// If editing a file > no renmaing
-while (strlen($edit) == 0 && file_exists($filename . ".json"))
-{
-    // just slap copy on filename lol
-    echo ($filename . " already exists. renaming...<br>");
-    $filename .= " Kopie";
-    // Den Rezept namen auch ändern
-    $rezept['title'] .= " Kopie";
-}
-
 $filename .= ".json";
 // pwd
 //echo getcwd();
 //touch($filename) or die("ERROR: Failed to create file! ".$filename."<br>");;
 $file = fopen($filename, "wx") or die("ERROR: Failed to write file! " . $filename . "<br>");
+file_put_contents($filename, "");
 // nl2br wegen Zubereitung formatierung
 fwrite($file, nl2br($jsonstr));
 fclose($file);

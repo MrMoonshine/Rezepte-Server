@@ -22,3 +22,5 @@ for ($x = 0; $x < count($fnarr); $x++) {
 
 echo("];\nconsole.log(recipe_files);\n");
 ?>
+// Global vars
+window.foodtypes = ["Vorspeise", "Suppe", "Salat", "Hauptspeise", "Nachspeise", "Mehlspeise"];

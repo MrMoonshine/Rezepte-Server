@@ -34,7 +34,6 @@ export default {
   },
   methods:{
     imgerr(para){
-        console.log("Hiding image");
         para.target.className = "d-none";
     }
   }
