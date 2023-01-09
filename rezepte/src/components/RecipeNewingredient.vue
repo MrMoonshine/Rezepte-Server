@@ -38,7 +38,7 @@ export default {
         name: "",
         amount: 0,
         unit: "g",
-        units_t: ["g", "kg", "l", "ml", "Esslöffel", "Teelöffel", "Prise", "Stück", "Packung", "Scheibe"]
+        units_t: ["g", "kg", "l", "ml", "Esslöffel", "Teelöffel", "Prise", "Stück", "Packung", "Scheibe", "Noagal", "Unbekannt"]
     };
   },
   props: {

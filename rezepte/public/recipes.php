@@ -22,5 +22,9 @@ for ($x = 0; $x < count($fnarr); $x++) {
 
 echo("];\nconsole.log(recipe_files);\n");
 ?>
+// Sort case insensitive
+window.recipe_files.sort(function (a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+});
 // Global vars
 window.foodtypes = ["Vorspeise", "Suppe", "Salat", "Hauptspeise", "Nachspeise", "Mehlspeise"];

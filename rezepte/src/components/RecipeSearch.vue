@@ -2,16 +2,16 @@
     <RecipeNew ref="newform" />
     <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
         <DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />
-        <div class="d-flex justify-content-center align-items-center">
-            <img :src="recipe.data.imageurl" @error="imgerr" class="h-75 img-responsive rounded w-75"/>
-        </div>
         <div class="flex-grow-1 mx-2">
             <div class="d-flex justify-content-between">
                 <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
                 <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
             </div>
             <h3>Für {{ recipe.data.amount }} Personen</h3>
-            <p>{{ recipe.data.description }}</p>
+            <p>
+                <img :src="recipe.data.imageurl" @error="imgerr" class="float-end h-75 img-responsive rounded w-75" alt="" />
+                {{ recipe.data.description }}
+            </p>
             <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
             <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                 <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
@@ -236,7 +236,7 @@ export default {
 <style>
 .rezeptanzeige img{
     object-fit: cover;
-    max-width: 32rem;
-    max-height: 24rem;
+    max-width: 5cm;
+    max-height: 4cm;
 }
 </style>
