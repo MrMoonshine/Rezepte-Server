@@ -8,10 +8,10 @@
                 <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
             </div>
             <h3>Für {{ recipe.data.amount }} Personen</h3>
-            <p>
+            <div>
                 <img :src="recipe.data.imageurl" @error="imgerr" class="float-end h-75 img-responsive rounded w-75" alt="" />
-                {{ recipe.data.description }}
-            </p>
+                <Markdown :source="recipe.data.description" />
+            </div>
             <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
             <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                 <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
@@ -39,6 +39,10 @@
 </template>
 
 <script>
+// Library for markdown:
+// https://www.npmjs.com/package/vue3-markdown-it
+import Markdown from 'vue3-markdown-it';
+
 // Import Cards
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
@@ -153,7 +157,8 @@ export default {
     IngredientTable,
     RecipeNew,
     DeleteModal,
-    AdvancedSearch
+    AdvancedSearch,
+    Markdown
   },
   data(){
     return {
