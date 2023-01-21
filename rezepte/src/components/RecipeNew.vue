@@ -64,7 +64,7 @@
                 <div class="d-block">
                     <RecipeNewingredient v-for="ingredient in ingredients" v-bind:key="ingredient" :ingredient="ingredient"/>
                 </div>
-                <label class="form-label">Zubereitung</label>
+                <label class="form-label">Zubereitung <i class="text-secondary">kann Markdown!</i></label>
                 <div>
                     <div class="form-floating">
                         <textarea v-if="edit_mode"
