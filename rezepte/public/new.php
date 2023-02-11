@@ -33,7 +33,19 @@
     </script>
 </body>
 <?php
-var_dump($_POST);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+function show_errors($brief){
+    echo("<h1 class=\"text-danger\">Rezept Upload Fehlgeschlagen!</h1>");
+    echo("<p><b>Grund:</b> ".$brief."</p>");
+    echo("<p><b>POST Data: </b>");
+    var_dump($_POST);
+    echo("</p>");
+    exit(1);
+}
+
 $filepath = "/var/www/Rezepte-Server/assets/";
 /*
 C R E A T I N G
@@ -92,7 +104,7 @@ count($_POST["zutat"]) > 0 && count($_POST["zutat"]) == count($_POST["menge"]) &
 }
 else
 {
-    echo ("<h1 class\"text-danger\">Error: Zutaten ungültig!</h1>");
+    show_errors("Zutaten ungültig");
 }
 
 $jsonstr = json_encode($rezept);
@@ -103,8 +115,8 @@ $filename = $filepath . $rezept['title'];
 $filename .= ".json";
 // pwd
 //echo getcwd();
-//touch($filename) or die("ERROR: Failed to create file! ".$filename."<br>");;
-$file = fopen($filename, "wx") or die("ERROR: Failed to write file! " . $filename . "<br>");
+
+$file = fopen($filename, "wx") or show_errors("ERROR: Failed to write file! " . $filename . "<br>");
 file_put_contents($filename, "");
 // nl2br wegen Zubereitung formatierung
 fwrite($file, nl2br($jsonstr));
@@ -114,6 +126,38 @@ echo "<h2 class='text-success'>Rezept wurde Erfolgreich hinzugefügt</h2>";
 echo("<p>Rezept wurde hier gespeichert: ".$filename."</p>");
 
 require ("bgrec.php");
-uploadFile("bild");
+$upload_err = uploadFile("bild");
+$upload_err_descr = "";
+$upload_err_highlight = "table-warning";
+switch($upload_err){
+    case UploadError::OK:
+        $upload_err_descr = "OK.";
+        $upload_err_highlight = "table-success";
+        break;
+    case UploadError::ERR_NONE:
+        $upload_err_descr = "Kein Bild.";
+        $upload_err_highlight = "";
+        break;
+    case UploadError::ERR_DUPLICATE: $upload_err_descr = "Datei existiert bereits"; break;
+    case UploadError::ERR_FILETYPE: $upload_err_descr = "Datei vom falschen Typ"; break;
+    case UploadError::ERR_SIZE: $upload_err_descr = "Dateigröße überschreitet das Limit von ".ini_get("upload_max_filesize")."!"; break;
+    default: $upload_err_descr = "Unbekannter Fehler."; break;
+}
+
+echo <<<TABLE
+<table class="table">
+    <tbody>
+        <tr>
+            <th>Speicherort</th>
+            <td>$filename</td>
+        </tr>
+        <tr>
+            <th class="$upload_err_highlight">Rezeptbild Upload</th>
+            <td class="$upload_err_highlight">$upload_err_descr</td>
+        </tr>
+    </tbody>
+</table>
+TABLE;
 ?>
+<a href="/rezepte" class="btn btn-primary">Zurück</a>
 </html>
