@@ -8,7 +8,7 @@
             <div v-if="edit_mode" class="alert alert-warning d-flex align-items-center" role="alert">
                 <p><b>ACHTUNG: </b>Dieses Formular wird <i class="text-primary">{{ rename }}</i> verändern!</p>
             </div>
-            <form class="d-print-none" action="rezepte/dist/new.php" method="POST" enctype="multipart/form-data">
+            <form class="d-print-none" action="rezepte/dist/recive.php" method="POST" enctype="multipart/form-data">
                 <div class="row gy-2 gx-3 align-items-center">
                     <div class="col-auto">
                         <label for="rezeptname" class="form-label">Rezeptname</label>

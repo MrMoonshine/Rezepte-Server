@@ -1,4 +1,5 @@
 <template>
+    <NavBar></NavBar>
     <RecipeNew ref="newform" />
     <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
         <DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />
@@ -44,6 +45,7 @@
 import Markdown from 'vue3-markdown-it';
 
 // Import Cards
+import NavBar from './NavBar.vue'
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
 import RecipeNew from './RecipeNew.vue'
@@ -153,13 +155,14 @@ class Recipe{
 export default {
   name: 'RecipeSearch',
   components:{
+    NavBar,
     RecipeCard,
     IngredientTable,
     RecipeNew,
     DeleteModal,
     AdvancedSearch,
-    Markdown
-  },
+    Markdown,
+},
   data(){
     return {
         displayed_recipe: [],
@@ -237,11 +240,3 @@ export default {
     }
 }
 </script>
-
-<style>
-.rezeptanzeige img{
-    object-fit: cover;
-    max-width: 5cm;
-    max-height: 4cm;
-}
-</style>

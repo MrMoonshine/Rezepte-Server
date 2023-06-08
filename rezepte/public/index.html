@@ -9,35 +9,11 @@
     <title>Alpakaküche</title>
   </head>
   <body>
-    <style>
-      /*Nav bar icon size */
-      a>img{
-          max-width: 48px !important;
-          max-height: 48px !important;
-      }
-    </style>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary d-flex d-print-none">
-      <a class="navbar-brand" href="#"><img src="/favicon.ico" alt="">Alpakaküche</a>
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-          data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"
-          aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarToggleExternalContent">
-          <div class="navbar-nav">
-              <a class="nav-item nav-link active" href="#">Rezepte </a>
-              <a class="nav-item nav-link" href="<%= BASE_URL %>config.php">Config</a>
-              <a class="nav-item nav-link" href="/">Home</a>
-          </div>
-      </div>
-    </nav>
+    <script src="<%= BASE_URL %>recipes.php"></script>
+    <div id="app"></div>
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
-    <script src="<%= BASE_URL %>recipes.php"></script>
-    <div id="app" class="container"></div>
     <!-- built files will be auto injected -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">

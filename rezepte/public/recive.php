@@ -49,7 +49,6 @@ function show_errors($brief){
 $filepath = "/var/www/Rezepte-Server/assets/";
 /*
 C R E A T I N G
-
 */
 //echo var_dump($_POST);
 // Basic Error Handling

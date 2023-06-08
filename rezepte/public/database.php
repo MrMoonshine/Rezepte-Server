@@ -8,7 +8,17 @@
         const Critical = "Critical";
     }
 
+    $answer = array(
+        "status" => Severity::Info,
+        "statusId" => 0,
+        "logs" => [],
+        "data" => []
+    );
+
     function logInPage($msg, $severity = Severity::Info){
+        # use global var here
+        global $answer;
+
         $cssclass = "text-";
         switch($severity){
             case Severity::Info:
@@ -25,6 +35,20 @@
                 break;
         }
 
+        array_push($answer["logs"],array(
+            "severity" => $severity,
+            "msg" => $msg
+        ));
+
+        if(!isset($_GET["mode"])){
+            return;
+        }
+
+        if($_GET["mode"] != "html"){
+            return;
+        }
+
+        # Print Logs if enabled by GET var
         echo <<<HTML
             <p>
                 <b class="$cssclass">$severity:</b> $msg</code>
@@ -93,7 +117,7 @@
                     name NOT LIKE 'sqlite_%';
             SQL;
 
-            echo($sql);
+            //echo($sql);
 
             $matchcount = $this->db->querySingle($sql);
             return $matchcount - $tablecount;
@@ -124,5 +148,61 @@
 
             return 0;
         }
+        # Execute a select statement
+        public function query($sql){
+            return $this->db->query($sql);
+        }
+
+        public function exec($sql){
+            if(!$this->db->exec($sql)){
+                logInPage("Failed to execute this query: <code>".$sql."</code><br>".$this->db->lastErrorMsg(), Severity::Critical);
+                return -1;
+            }
+            return 0;
+        }
+    }
+
+    $db = new Database();
+
+    # List of simple tables with columns name and id
+    $simple_tables = ["allergenes"];
+    foreach($simple_tables as $table){
+        if(!isset($_GET[$table])){
+            continue;
+        }
+        $value = htmlspecialchars($_GET[$table]);
+
+        $sql = "";
+        if(isset($_GET["delete"])){
+            $delete = $_GET["delete"];
+            $sql = <<<SQL
+                delete from "$table" where id = "$delete";
+            SQL;
+            $db->exec($sql);
+        }else if(isset($_GET["insert"])){
+            if(strlen($value) <= 0){
+                continue;
+            }
+            $sql = <<<SQL
+                insert into "$table" ("name") values ("$value");
+            SQL;
+            $db->exec($sql);
+        }else{
+            $sql = <<<SQL
+                SELECT "name","id" FROM "$table";
+            SQL;
+            $results = $db->query($sql);
+            while ($row = $results->fetchArray()) {
+                array_push($answer["data"], $row);
+            }
+        }
+    }
+    unset($table);
+    /*
+        FINALLY, Send all as JSON Data
+    */
+    if(!isset($_GET["mode"])){
+        header('Content-type: application/json; charset=utf-8');
+        echo json_encode($answer);
     }
 ?>
