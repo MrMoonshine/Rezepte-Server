@@ -1,8 +1,8 @@
 <template>
     <form class="mb-3" method="POST" :action="action">
-        <label v-if="title" for="table + 'Input'" class="form-label">{{title}}</label>
+        <label v-if="title" for="table + value + 'Input'" class="form-label">{{title}}</label>
         <div class="input-group">
-          <input ref="input" type="text" class="form-control" :id="table + 'Input'" :name="table" :value="value" :aria-describedby="table + 'Help'" required>
+          <input ref="input" type="text" class="form-control" :id="table + value + 'Input'" :name="table" :value="value" :aria-describedby="table + 'Help'" required>
           <input v-if="deleteform" type="text" name="delete" value="1" class="d-none" />
           <input ref="dbid" type="number" name="delete" :value="dbid" class="d-none" />
 

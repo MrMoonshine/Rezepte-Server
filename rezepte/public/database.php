@@ -160,44 +160,70 @@
             }
             return 0;
         }
-    }
 
-    $db = new Database();
-
-    # List of simple tables with columns name and id
-    $simple_tables = ["allergenes"];
-    foreach($simple_tables as $table){
-        if(!isset($_GET[$table])){
-            continue;
-        }
-        $value = htmlspecialchars($_GET[$table]);
-
-        $sql = "";
-        if(isset($_GET["delete"])){
-            $delete = $_GET["delete"];
-            $sql = <<<SQL
-                delete from "$table" where id = "$delete";
-            SQL;
-            $db->exec($sql);
-        }else if(isset($_GET["insert"])){
-            if(strlen($value) <= 0){
-                continue;
-            }
-            $sql = <<<SQL
-                insert into "$table" ("name") values ("$value");
-            SQL;
-            $db->exec($sql);
-        }else{
+        /*
+            @brief Queries a simple table witha a name and id columns. Writes selected columns in rows
+            @param $table name of the table
+        */
+        public function stQuery($table){
+            # use global var here
+            global $answer;
+            
             $sql = <<<SQL
                 SELECT "name","id" FROM "$table";
             SQL;
-            $results = $db->query($sql);
+            $results = $this->query($sql);
             while ($row = $results->fetchArray()) {
                 array_push($answer["data"], $row);
             }
         }
+
+        // Execute a DML on a simple table
+        public function stInsert($table, $value){
+            if(strlen($value) <= 0){
+                return;
+            }
+            $sql = <<<SQL
+                insert into "$table" ("name") values ("$value");
+            SQL;
+            $this->exec($sql);
+        }
+
+        public function stDelete($table, $id){
+            if($id < 0){
+                return;
+            }
+            $sql = <<<SQL
+                delete from "$table" where id = "$delete";
+            SQL;
+            $this->exec($sql);
+        }
     }
-    unset($table);
+
+    $db = new Database();
+
+    if(isset($_GET["select"])){
+        // sanitize
+        $table = htmlspecialchars($_GET["select"]);
+        
+        switch($table){
+            case "allergenes":
+                $db->stQuery($table);
+                break;
+            case "units":
+                $db->stQuery($table);
+                break; 
+            default:
+                logInPage("Skipping this table with no handler: \"".$table."\"");
+                break;
+        }
+    }
+    # List of simple tables with columns name and id
+    /*$simple_tables = ["allergenes", "units"];
+    foreach($simple_tables as $table){
+
+    }
+    unset($table);*/
     /*
         FINALLY, Send all as JSON Data
     */
