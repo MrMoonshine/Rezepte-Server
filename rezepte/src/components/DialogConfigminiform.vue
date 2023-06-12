@@ -41,17 +41,30 @@
       submit(){
         /*console.log("Value: " + this.$refs.input.value);
         console.log("DBID: " + this.$refs.dbid.value);*/
-        const url = new URL(window.location.protocol + "//" + window.location.hostname + "/rezepte/" + this.action);
-        url.searchParams.append(this.table, this.$refs.input.value);
-        if(this.deleteform && this.$refs.dbid.value.length > 0){
-          url.searchParams.append("delete", this.$refs.dbid.value);
-        }else{
-          url.searchParams.append("insert", this.$refs.input.value);
+        // Abort if empty form is being sumbitted
+        if(
+          this.$refs.dbid.value.length < 1 && this.deleteform ||
+          this.$refs.input.value.length < 0
+          ){
+          console.warn("Input is empty, aborting database request!");
+          return;
         }
 
-        console.log("My URL is: " + url.href);
-
+        const url = new URL(window.location.protocol + "//" + window.location.hostname + "/rezepte/" + this.action);
+        const formData = new FormData();
         const req = new XMLHttpRequest();
+        
+        if(this.deleteform){
+          // It is a delete-form and the input str is not empty
+          formData.append("delete", this.table);
+          formData.append("id", String(this.$refs.dbid.value));
+        }else{
+          // otherwise
+          formData.append("insert", this.table);
+          formData.append("name", this.$refs.input.value);
+        }
+
+        console.log("My URL is: " + url.href);*/
         req.addEventListener("load", () =>{
           /*
               Write all logs into a array. it gets further processed by VUE
@@ -75,11 +88,17 @@
         });
 
         req.addEventListener("loadend", () => {
-          this.$emit(this.table + "-update");
-          console.log("Sending " + this.table + "-update");
+          if(this.logs.length > 0){
+            console.warn("Received "+this.logs.length+" Logs, aborting DB update!");
+            return;
+          }
+          // No logs, update table
+          this.$emit("configdb-update");
+          console.log("Sending configdb-update");
         });
-        req.open("GET", url.href);
-        req.send();
+
+        req.open("POST", url.href);
+        req.send(formData);
       }
     }
 }

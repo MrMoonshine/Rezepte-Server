@@ -194,13 +194,16 @@
                 return;
             }
             $sql = <<<SQL
-                delete from "$table" where id = "$delete";
+                delete from "$table" where "id" = "$id";
             SQL;
             $this->exec($sql);
         }
     }
 
     $db = new Database();
+
+    // Useful for debug purposes
+    //logInPage(var_export($_POST, true));
 
     if(isset($_GET["select"])){
         // sanitize
@@ -217,13 +220,45 @@
                 logInPage("Skipping this table with no handler: \"".$table."\"");
                 break;
         }
+    }else if(isset($_POST["insert"])){
+        // sanitize
+        $table = htmlspecialchars($_POST["insert"]);
+        if(isset($_POST["name"])){
+            $value = htmlspecialchars($_POST["name"]);
+            switch($table){
+                case "allergenes":
+                    $db->stInsert($table, $value);
+                    break;
+                case "units":
+                    $db->stInsert($table, $value);
+                    break; 
+                default:
+                    logInPage("Skipping this table with no handler: \"".$table."\"");
+                    break;
+            }
+        }else{
+            logInPage("Missing \$_POST variable \"name\"", Severity::Critical);
+        } 
+    }else if(isset($_POST["delete"])){
+        // sanitize
+        $table = htmlspecialchars($_POST["delete"]);
+        if(isset($_POST["id"])){
+            $value = intval($_POST["id"]);
+            switch($table){
+                case "allergenes":
+                    $db->stDelete($table, $value);
+                    break;
+                case "units":
+                    $db->stDelete($table, $value);
+                    break; 
+                default:
+                    logInPage("Skipping this table with no handler: \"".$table."\"");
+                    break;
+            }
+        }else{
+            logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
+        }        
     }
-    # List of simple tables with columns name and id
-    /*$simple_tables = ["allergenes", "units"];
-    foreach($simple_tables as $table){
-
-    }
-    unset($table);*/
     /*
         FINALLY, Send all as JSON Data
     */

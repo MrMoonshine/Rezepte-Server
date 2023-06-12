@@ -27,17 +27,17 @@
           </form>         
         </fieldset>
         <fieldset class="rounded border border-primary p-3 m-2">
-          <DialogConfigminiform title="Allergen" table="allergenes" @allergenes-update="fetchAllergeneTable"
+          <DialogConfigminiform title="Allergen" table="allergenes" @configdb-update="this.fetchSimpleTable('allergenes')"
             :action="dbscript" description="Allergene wie z.B Glutenfrei, Vegan, etc..."></DialogConfigminiform>
-          <DialogConfigminiform v-for="allergene in allergenes" v-bind:key="allergene" table="allergenes"
-            @allergenes-update="fetchAllergeneTable" :value="allergene.name" :dbid="allergene.id" :action="dbscript"
+          <DialogConfigminiform v-for="allergene in simpleTables['allergenes']" v-bind:key="allergene" table="allergenes"
+            @configdb-update="this.fetchSimpleTable('allergenes')" :value="allergene.name" :dbid="allergene.id" :action="dbscript"
             deleteform></DialogConfigminiform>
         </fieldset>
       </div>
       <fieldset class="rounded border border-primary p-3 m-2">
-        <DialogConfigminiform title="Einheit" table="units" @units-update="test" :action="dbscript"
+        <DialogConfigminiform title="Einheit" table="units" @configdb-update="this.fetchSimpleTable('units')" :action="dbscript"
           description="Einheiten wie z.B Gramm, Liter etc..."></DialogConfigminiform>
-        <DialogConfigminiform v-for="unit in units" v-bind:key="unit" table="units" @units-update="fetchUnitsTable"
+        <DialogConfigminiform v-for="unit in simpleTables['units']" v-bind:key="unit" table="units" @configdb-update="this.fetchSimpleTable('units')"
           :value="unit.name" :dbid="unit.id" :action="dbscript" deleteform></DialogConfigminiform>
       </fieldset>
     </div>
@@ -49,8 +49,7 @@ export default {
   name: 'DialogConfig',
   data() {
     return {
-      allergenes: [],
-      units: [],
+      simpleTables: [],
       dbscript: "rezepte/dist/database.php",
       dburl: window.location.protocol + "//" + window.location.hostname + "/rezepte/",
     };
@@ -59,8 +58,8 @@ export default {
     DialogConfigminiform
   },
   mounted() {
-    this.fetchAllergeneTable();
-    this.fetchUnitsTable();
+    this.fetchSimpleTable('allergenes');
+    this.fetchSimpleTable('units');
   },
   methods: {
     showDialog() {
@@ -71,31 +70,17 @@ export default {
       // Raw DOM of dialog must be accessed: therefore the ref attribute is set
       this.$refs.dialog.close();
     },
-    fetchAllergeneTable() {
+    fetchSimpleTable(table) {
       const req = new XMLHttpRequest();
       const url = new URL(this.dburl + this.dbscript);
-      url.searchParams.append("allergenes", "");
+      url.searchParams.append("select", table);
       console.log(url);
       req.addEventListener("load", () => {
+        //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
         if (jobj) {
-          this.allergenes = jobj.data;
-          console.log(this.allergenes);
-        }
-      });
-      req.open("GET", url.href);
-      req.send();
-    },
-    fetchUnitsTable() {
-      const req = new XMLHttpRequest();
-      const url = new URL(this.dburl + this.dbscript);
-      url.searchParams.append("units", "");
-      console.log(url);
-      req.addEventListener("load", () => {
-        let jobj = JSON.parse(req.responseText);
-        if (jobj) {
-          this.units = jobj.data;
-          console.log(this.units);
+          this.simpleTables[table] = jobj.data;
+          console.log(this.simpleTables[table]);
         }
       });
       req.open("GET", url.href);
