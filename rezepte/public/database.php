@@ -203,24 +203,8 @@
     $db = new Database();
 
     // Useful for debug purposes
-    //logInPage(var_export($_POST, true));
-
-    if(isset($_GET["select"])){
-        // sanitize
-        $table = htmlspecialchars($_GET["select"]);
-        
-        switch($table){
-            case "allergenes":
-                $db->stQuery($table);
-                break;
-            case "units":
-                $db->stQuery($table);
-                break; 
-            default:
-                logInPage("Skipping this table with no handler: \"".$table."\"");
-                break;
-        }
-    }else if(isset($_POST["insert"])){
+    //logInPage(var_export($_POST, true));    
+    if(isset($_POST["insert"])){
         // sanitize
         $table = htmlspecialchars($_POST["insert"]);
         if(isset($_POST["name"])){
@@ -258,6 +242,23 @@
         }else{
             logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
         }        
+    }
+    
+    if(isset($_GET["select"])){
+        // sanitize
+        $table = htmlspecialchars($_GET["select"]);
+        
+        switch($table){
+            case "allergenes":
+                $db->stQuery($table);
+                break;
+            case "units":
+                $db->stQuery($table);
+                break; 
+            default:
+                logInPage("Skipping this table with no handler: \"".$table."\"");
+                break;
+        }
     }
     /*
         FINALLY, Send all as JSON Data

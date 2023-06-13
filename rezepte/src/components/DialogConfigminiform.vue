@@ -63,8 +63,9 @@
           formData.append("insert", this.table);
           formData.append("name", this.$refs.input.value);
         }
+        // Always select the table afterwards, to not make an additional request
+        url.searchParams.append("select", this.table);
 
-        console.log("My URL is: " + url.href);*/
         req.addEventListener("load", () =>{
           /*
               Write all logs into a array. it gets further processed by VUE
@@ -85,15 +86,13 @@
             console.log(req.responseText);
             this.showerr = true;
           }
-        });
-
-        req.addEventListener("loadend", () => {
+          // Forward received data to 
           if(this.logs.length > 0){
             console.warn("Received "+this.logs.length+" Logs, aborting DB update!");
             return;
           }
           // No logs, update table
-          this.$emit("configdb-update");
+          this.$emit("configdb-update", jobj.data ?? []);
           console.log("Sending configdb-update");
         });
 

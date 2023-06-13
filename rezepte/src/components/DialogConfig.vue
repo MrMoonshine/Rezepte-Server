@@ -27,17 +27,17 @@
           </form>         
         </fieldset>
         <fieldset class="rounded border border-primary p-3 m-2">
-          <DialogConfigminiform title="Allergen" table="allergenes" @configdb-update="this.fetchSimpleTable('allergenes')"
+          <DialogConfigminiform title="Allergen" table="allergenes" @configdb-update="this.fetchSimpleTable('allergenes', $event)"
             :action="dbscript" description="Allergene wie z.B Glutenfrei, Vegan, etc..."></DialogConfigminiform>
           <DialogConfigminiform v-for="allergene in simpleTables['allergenes']" v-bind:key="allergene" table="allergenes"
-            @configdb-update="this.fetchSimpleTable('allergenes')" :value="allergene.name" :dbid="allergene.id" :action="dbscript"
+            @configdb-update="this.fetchSimpleTable('allergenes', $event)" :value="allergene.name" :dbid="allergene.id" :action="dbscript"
             deleteform></DialogConfigminiform>
         </fieldset>
       </div>
       <fieldset class="rounded border border-primary p-3 m-2">
-        <DialogConfigminiform title="Einheit" table="units" @configdb-update="this.fetchSimpleTable('units')" :action="dbscript"
+        <DialogConfigminiform title="Einheit" table="units" @configdb-update="this.fetchSimpleTable('units', $event)" :action="dbscript"
           description="Einheiten wie z.B Gramm, Liter etc..."></DialogConfigminiform>
-        <DialogConfigminiform v-for="unit in simpleTables['units']" v-bind:key="unit" table="units" @configdb-update="this.fetchSimpleTable('units')"
+        <DialogConfigminiform v-for="unit in simpleTables['units']" v-bind:key="unit" table="units" @configdb-update="this.fetchSimpleTable('units', $event)"
           :value="unit.name" :dbid="unit.id" :action="dbscript" deleteform></DialogConfigminiform>
       </fieldset>
     </div>
@@ -70,7 +70,12 @@ export default {
       // Raw DOM of dialog must be accessed: therefore the ref attribute is set
       this.$refs.dialog.close();
     },
-    fetchSimpleTable(table) {
+    fetchSimpleTable(table, data = null) {
+      if(data){
+        // use passed data by insert and select php-script
+        this.simpleTables[table] = data;
+        return;
+      }
       const req = new XMLHttpRequest();
       const url = new URL(this.dburl + this.dbscript);
       url.searchParams.append("select", table);
@@ -80,7 +85,7 @@ export default {
         let jobj = JSON.parse(req.responseText);
         if (jobj) {
           this.simpleTables[table] = jobj.data;
-          console.log(this.simpleTables[table]);
+          //console.log(this.simpleTables[table]);
         }
       });
       req.open("GET", url.href);
