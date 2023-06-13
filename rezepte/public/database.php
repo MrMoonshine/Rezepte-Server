@@ -1,5 +1,5 @@
 <?php
-    define("INSTALLATION_PATH", "/var/www/Rezepte-Server/");
+    require("config.php");
 
     abstract class Severity{
         const Info = "Info";
@@ -243,7 +243,7 @@
             logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
         }        
     }
-    
+
     if(isset($_GET["select"])){
         // sanitize
         $table = htmlspecialchars($_GET["select"]);

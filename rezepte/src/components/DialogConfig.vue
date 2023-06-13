@@ -11,10 +11,10 @@
           <div class="mb-3">
             <label for="takeSnapshotButton" class="form-label">Download Snapshot</label>
             <br>
-            <button class="btn btn-primary w-100" id="takeSnapshotButton" aria-describedby="takeSnapshotButtonHelp">
+            <a href="rezepte/dist/snapshot.php" class="btn btn-primary w-100" id="takeSnapshotButton" aria-describedby="takeSnapshotButtonHelp">
               Neuer Snapshot 
               <span class="text-primary bg-light rounded-circle font-weight-bold" style="padding: 0px 0.4rem;">&darr;</span>
-            </button>
+            </a>
             <div id="takeSnapshotButtonHelp" class="form-text">Erstellt einen Snapshot, der heruntergeladen werden kann</div>
           </div>
           <form>
