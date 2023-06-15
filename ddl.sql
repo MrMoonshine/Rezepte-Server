@@ -23,6 +23,12 @@ CREATE TABLE IF NOT EXISTS "allergenes" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
+CREATE TABLE IF NOT EXISTS "dishtypes" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"name"	INTEGER NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
 CREATE TABLE IF NOT EXISTS "connection_recipe_ingredients" (
 	"recipe"	INTEGER NOT NULL,
 	"ingredient"	INTEGER NOT NULL,
@@ -68,3 +74,19 @@ CREATE TABLE "unit_deletion_prevention" (
 	FOREIGN KEY("id") REFERENCES "units"("id")
 );
 insert into unit_deletion_prevention ("id") select "id" from "units";
+/*
+	Default Dish types
+*/
+INSERT INTO "dishtypes" ("name") VALUES ("Vorspeise");
+INSERT INTO "dishtypes" ("name") VALUES ("Suppe");
+INSERT INTO "dishtypes" ("name") VALUES ("Salat");
+INSERT INTO "dishtypes" ("name") VALUES ("Hauptspeise");
+INSERT INTO "dishtypes" ("name") VALUES ("Nachspeise");
+INSERT INTO "dishtypes" ("name") VALUES ("Mehlspeise");
+INSERT INTO "dishtypes" ("name") VALUES ("Cocktail");
+
+CREATE TABLE "dishtype_deletion_prevention" (
+	"id"	INTEGER NOT NULL,
+	FOREIGN KEY("id") REFERENCES "dishtypes"("id")
+);
+insert into dishtype_deletion_prevention ("id") select "id" from "dishtypes";

@@ -1,41 +1,44 @@
 <template>
     <NavBar></NavBar>
-    <RecipeNew ref="newform" />
-    <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
-        <DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />
-        <div class="flex-grow-1 mx-2">
-            <div class="d-flex justify-content-between">
-                <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
-                <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
-            </div>
-            <h3>Für {{ recipe.data.amount }} Personen</h3>
-            <div>
-                <img :src="recipe.data.imageurl" @error="imgerr" class="float-end h-75 img-responsive rounded w-75" alt="" />
-                <Markdown :source="recipe.data.description" />
-            </div>
-            <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
-            <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
-                <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
-                <button @click="edit_recipe(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
-                <button @click="show_delete_modal = true" class="btn btn-danger flex-fill my-2">Löschen</button>
+    <div class="container">
+        <RecipeNew ref="newform" />
+        <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
+            <DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />
+            <div class="flex-grow-1 mx-2">
+                <div class="d-flex justify-content-between">
+                    <h1 class="flex-grow-1 text-primary">{{ recipe.data.title }}</h1>
+                    <button @click="displayed_recipe = []" type="button" class="btn-close mt-2" aria-label="Close"></button>
+                </div>
+                <h3>Für {{ recipe.data.amount }} Personen</h3>
+                <div>
+                    <img :src="recipe.data.imageurl" @error="imgerr" class="float-end h-75 img-responsive rounded w-75" alt="" />
+                    <Markdown :source="recipe.data.description" />
+                </div>
+                <IngredientTable :amount="recipe.data.amount" :ingredients="recipe.data.ingredients"/>
+                <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
+                    <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
+                    <button @click="edit_recipe(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
+                    <button @click="show_delete_modal = true" class="btn btn-danger flex-fill my-2">Löschen</button>
+                </div>
             </div>
         </div>
-    </div>
-    <button @click="showForm" class="btn btn-success w-100 my-3 d-print-none"><b>+</b> Neues Rezept</button>
-    <!--Search-->
-    <div class="d-block d-print-none mb-3">
-        <label for="rezeptsuche" class="fw-bold">Einfache Suche</label>
-        <div class="input-group">
-            <input @input="basic_search" type="search" id="rezeptsuche" placeholder="Rezept Suchen" class="form-control border border-primary"/>
-            <button class="input-group-text btn btn-primary dropdown-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#adv-search-form" aria-expanded="false" aria-controls="adv-search-form">Advanced</button>
+        <button @click="showDialog" class="btn btn-success w-100 my-3 d-print-none"><b>+</b> Neues Rezept</button>
+        <!--Search-->
+        <div class="d-block d-print-none mb-3">
+            <label for="rezeptsuche" class="fw-bold">Einfache Suche</label>
+            <div class="input-group">
+                <input @input="basic_search" type="search" id="rezeptsuche" placeholder="Rezept Suchen" class="form-control border border-primary"/>
+                <button class="input-group-text btn btn-primary dropdown-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#adv-search-form" aria-expanded="false" aria-controls="adv-search-form">Advanced</button>
+            </div>
+            <div class="collapse" id="adv-search-form">
+                <AdvancedSearch @advanced-search="(cri) => advanced_search(cri)" />
+            </div>
         </div>
-        <div class="collapse" id="adv-search-form">
-            <AdvancedSearch @advanced-search="(cri) => advanced_search(cri)" />
+        <PaginationSelection></PaginationSelection>
+        <div class="d-block d-print-none">
+            <!--Foreach Recipe: Create a selection card-->
+            <RecipeCard v-for="recipe in matching_recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>
         </div>
-    </div>
-    <div class="d-block d-print-none">
-        <!--Foreach Recipe: Create a selection card-->
-        <RecipeCard v-for="recipe in matching_recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>
     </div>
 </template>
 
@@ -51,6 +54,7 @@ import IngredientTable from './IngredientTable.vue'
 import RecipeNew from './RecipeNew.vue'
 import DeleteModal from './DeleteModal.vue'
 import AdvancedSearch from './AdvancedSearch.vue'
+import PaginationSelection from './PaginationSelection.vue'
 
 const RECIPE_BASE_PATH = "/rezepte/assets/";
 const RECIPE_BASE_URL = window.location.protocol + "//" + window.location.hostname + RECIPE_BASE_PATH;
@@ -162,6 +166,7 @@ export default {
     DeleteModal,
     AdvancedSearch,
     Markdown,
+    PaginationSelection
 },
   data(){
     return {
@@ -231,8 +236,8 @@ export default {
             alert("Dein browser kann nicht drucken!");
         }
     },
-    showForm(){
-        this.$refs.newform.showForm();
+    showDialog(){
+        this.$refs.newform.showDialog();
     }
   },
     beforeMount(){

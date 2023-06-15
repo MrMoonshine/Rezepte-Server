@@ -68,7 +68,8 @@
             "units",
             "allergenes",
             "connection_recipe_ingredients",
-            "connection_recipe_allergenes"
+            "connection_recipe_allergenes",
+            "dishtypes"
         ];
 
         # Members:
@@ -219,7 +220,10 @@
                     break;
                 case "units":
                     $db->stInsert($table, $value);
-                    break; 
+                    break;
+                case "dishtypes":
+                    $db->stDelete($table, $value);
+                    break;  
                 default:
                     logInPage("Skipping this table with no handler: \"".$table."\"");
                     break;
@@ -237,6 +241,9 @@
                     $db->stDelete($table, $value);
                     break;
                 case "units":
+                    $db->stDelete($table, $value);
+                    break;
+                case "dishtypes":
                     $db->stDelete($table, $value);
                     break; 
                 default:
@@ -268,7 +275,10 @@
                 break;
             case "units":
                 $db->stQuery($table);
-                break; 
+                break;
+            case "dishtypes":
+                $db->stQuery($table);
+                break;  
             default:
                 logInPage("Skipping this table with no handler: \"".$table."\"");
                 break;

@@ -1,14 +1,14 @@
 <template>
-    <div v-if="show" class="position-absolute recipe-form-shadow w-100 top-0 start-0">
-        <div class="recipe-form-new w-100 p-4 overflow-auto shadow-lg rounded bg-light position-absolute top-50 start-50 translate-middle">
+        <dialog ref="dialog" class="p-4 overflow-auto shadow-lg rounded bg-light">
             <div class="d-flex justify-content-between d-print none">
-                <h1 class="text-primary flex-grow-1">Neues Rezept</h1>
-                <button @click="hideForm" type="button" class="btn-close mt-2" aria-label="Close" />
+                <h2 class="text-primary flex-grow-1">Neues Rezept</h2>
+                <button @click="close" type="button" class="btn-close mt-2" aria-label="Close"></button>
             </div>
             <div v-if="edit_mode" class="alert alert-warning d-flex align-items-center" role="alert">
                 <p><b>ACHTUNG: </b>Dieses Formular wird <i class="text-primary">{{ rename }}</i> verändern!</p>
             </div>
-            <form class="d-print-none" action="rezepte/dist/recive.php" method="POST" enctype="multipart/form-data">
+            <form @submit="this.submitHandler($event)" class="d-print-none" method="POST" enctype="multipart/form-data">
+                <input name="insert" value="recipes" type="text" class="d-none">
                 <div class="row gy-2 gx-3 align-items-center">
                     <div class="col-auto">
                         <label for="rezeptname" class="form-label">Rezeptname</label>
@@ -38,21 +38,17 @@
                                 <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                    <button @click="setFoodType" v-for="foodtype_i in foodtypes" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i }}</button>
-                                    <span><hr class="dropdown-divider"></span>
-                                    <button @click="setFoodType" class="dropdown-item" type="button">Cocktail</button>
+                                    <button @click="setFoodType" v-for="foodtype_i in simpleTables['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>
                                 </div>
                             </div>
                         </div>
                         <div id="speiseartHelp" class="form-text">Wie wird es serviert?</div>
                     </div>
                     <div class="col-auto">
-                        <label class="form-check-label" for="gfreesel">Glutenfrei</label>
-                        <br>
-                        <div class="form-check form-switch">
-                            <input v-model="reglutenfree" class="form-check-input" type="checkbox" name="glutenfrei">
+                        <div v-for="allergen in simpleTables['allergenes']" v-bind:key="allergen" class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="allergenes" :id="'allergen' + allergen + 'switch'">
+                            <label class="form-check-label" :for="'allergen' + allergen + 'switch'">{{ allergen.name }}</label>
                         </div>
-                        <div id="glutenHelp" class="form-text">Glutenfrei?</div>
                     </div>
                     <div class="col-auto">
                         <label for="formreset" class="form-label">Formular säubern</label>
@@ -125,8 +121,12 @@
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
+            <ul>
+              <li v-for="log in logs" v-bind:key="log">
+                <b>{{ log.severity }}</b> {{ log.msg }}
+              </li>
+            </ul>
+        </dialog>
 </template>
 
 <script>
@@ -148,7 +148,13 @@ export default {
         redescription: "",
         reglutenfree: false,
         retime: "01:00",
-        reimgaddr: ""
+        reimgaddr: "",
+        logs: [],
+        // Database Info
+        dbscript: "rezepte/dist/database.php",
+        dburl: window.location.protocol + "//" + window.location.hostname + "/rezepte/",
+        // Verfügbare einheiten, Allergene zum Auswählen
+        simpleTables: [],              
     };
   },
   components:{
@@ -157,48 +163,18 @@ export default {
   props: {
 
   },
+  mounted(){
+    this.fetchSimpleTable("units");
+    this.fetchSimpleTable("allergenes");
+    this.fetchSimpleTable("dishtypes");
+  },
   methods:{
-    showForm(reset = true){
-        // Empty ingredients
-        if(reset){
-            this.resetForm();
-        }
-
-        window.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: 'instant',
-        });
-        document.getElementsByTagName("body")[0].classList.add("overflow-hidden");        
-        
-        this.show = true;
+    showDialog(){
+        this.$refs.dialog.showModal();
     },
-    showFormEdit(recipe){
-        this.resetForm();
-        this.edit_mode = true;
-
-        this.rename = recipe.data.title;
-        this.reamount = recipe.data.amount;
-        this.redescription = recipe.data.description;
-        this.reglutenfree = recipe.data.glutenFree;
-        this.retime = recipe.data.estimatedTime;
-        this.reimgaddr = recipe.data.imageurl;
-        // Foodtype must have been defined
-        if(recipe.data.foodtype){
-            this.foodtype = recipe.data.foodtype;
-            this.foodtypedisplay = this.foodtype;
-        }
-
-        // Fill in ingredients
-        for(var i in recipe.data.ingredients){
-            this.newIngredient(recipe.data.ingredients[i]);
-        }
-        this.showForm(false);
-    },
-    hideForm(){
-        document.getElementsByTagName("body")[0].classList.remove("overflow-hidden");
-        this.show = false;
-        this.edit_mode = false;
+    close() {
+      // Raw DOM of dialog must be accessed: therefore the ref attribute is set
+      this.$refs.dialog.close();
     },
     resetForm(){
         //console.log("Resetting form");
@@ -228,6 +204,45 @@ export default {
     setFoodType(para){
         this.foodtype = para.target.innerHTML;
         this.foodtypedisplay = this.foodtype;
+    },
+    // Simple table von datenbank holen
+    fetchSimpleTable(table) {
+      const req = new XMLHttpRequest();
+      const url = new URL(this.dburl + this.dbscript);
+      url.searchParams.append("select", table);
+      console.log(url);
+      req.addEventListener("load", () => {
+        //console.log(req.responseText);
+        let jobj = JSON.parse(req.responseText);
+        if (jobj) {
+          this.simpleTables[table] = jobj.data;
+          //console.log(this.simpleTables[table]);
+        }
+      });
+      req.open("GET", url.href);
+      req.send();
+    },
+    submitHandler(event){
+        const formData = new FormData(event.target);
+
+        const req = new XMLHttpRequest();
+        const url = new URL(this.dburl + this.dbscript);
+        req.open("POST", url.href);
+        req.addEventListener("load", () => {
+            //console.log(req.responseText);
+            let jobj = JSON.parse(req.responseText);
+            console.log(jobj);
+            if (jobj) {
+            this.logs = jobj.logs;
+            if(this.logs.length == 0){
+                jobj.logs.push({
+                severity: "Info", msg: "Upload OK, Datenbank wurde überschrieben. Reload empfohlen."
+                });
+            }
+            }
+        });
+        req.send(formData);
+        event.preventDefault();
     }
   }
 }

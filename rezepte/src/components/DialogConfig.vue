@@ -45,6 +45,12 @@
         <DialogConfigminiform v-for="unit in simpleTables['units']" v-bind:key="unit" table="units" @configdb-update="this.fetchSimpleTable('units', $event)"
           :value="unit.name" :dbid="unit.id" :action="dbscript" deleteform></DialogConfigminiform>
       </fieldset>
+      <fieldset class="rounded border border-primary p-3 m-2">
+        <DialogConfigminiform title="Speiseart" table="dishtypes" @configdb-update="this.fetchSimpleTable('dishtypes', $event)" :action="dbscript"
+          description="Speisearten wie z.B Vorspeise, Hauptspeise etc..."></DialogConfigminiform>
+        <DialogConfigminiform v-for="dishtype in simpleTables['dishtypes']" v-bind:key="dishtype" table="dishtypes" @configdb-update="this.fetchSimpleTable('dishtypes', $event)"
+          :value="dishtype.name" :dbid="dishtype.id" :action="dbscript" deleteform></DialogConfigminiform>
+      </fieldset>
     </div>
   </dialog>
 </template>
@@ -67,6 +73,7 @@ export default {
   mounted() {
     this.fetchSimpleTable('allergenes');
     this.fetchSimpleTable('units');
+    this.fetchSimpleTable('dishtypes');
 
     // Set name for download file
     let date = new Date();
@@ -103,6 +110,7 @@ export default {
         if (jobj) {
           this.simpleTables[table] = jobj.data;
           //console.log(this.simpleTables[table]);
+          this.logs = jobj.logs;
         }
       });
       req.open("GET", url.href);
