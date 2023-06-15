@@ -3,18 +3,34 @@
 
 abstract class UploadError
 {
-    const OK = 0;
-    const ERR_NONE = 1;
-    const ERR_FILETYPE = 2;
-    const ERR_SIZE = 3;
-    const ERR_DUPLICATE = 4;
-    const ERR_UNKNOWN = 5;
+    const OK = "OK";
+    const ERR_NONE = "Keine Datei.";
+    const ERR_FILETYPE = "Datei ist vom falschen Typ!";
+    const ERR_SIZE = "Datei ist zu Groß!";
+    const ERR_DUPLICATE = "Datei gibt es schon.";
+    const ERR_UNKNOWN = "Unbekannter Fehler.";
 }
 
-  function uploadFile($pname){
+abstract class UploadMimetype
+{
+  const IMAGE = ["png", "jpg", "jpeg", "gif", "webp", "jfif"];
+  const TAR_GZ = ["tar.gz", "gz"];
+}
+  // ift = ist-filetype, sft = soll-filetype[UploadMimetype]
+  function verfiyMimeType($ift, $sft){
+    $matches = 0;
+    foreach($sft as &$ex){
+      if($ex == $ift){
+        $matches++;
+      }
+    }
+    unset($ex);
+    return $matches > 0;
+  }
+
+  function uploadFile($pname, $target_dir, $mimetype = UploadMimetype::IMAGE){
     //var_dump($_FILES);
     $upload_err = UploadError::OK;
-    $target_dir = "/var/www/Rezepte-Server/assets/images/";
     if(strlen(basename($_FILES[$pname]["name"]) < 1)){
       //echo ("No image specified OK!");
       return UploadError::ERR_NONE;
@@ -43,8 +59,7 @@ abstract class UploadError
     }
 
     // Allow certain file formats
-    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-    && $imageFileType != "gif" && $imageFileType != "webp"&& $imageFileType != "jfif") {
+    if(verfiyMimeType($imageFileType, $mimetype)) {
       //echo "Sorry, only JPG, JPEG, JFIF, PNG & GIF files are allowed.<br>";
       $upload_err = UploadError::ERR_FILETYPE;
     }

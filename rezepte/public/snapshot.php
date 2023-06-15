@@ -1,5 +1,6 @@
 <?php
     require("config.php");
+
     $filenamebase = "rezepte-".date("Y-m-d").".tar.gz";
     $filename = SNAPSHOT_DIR.$filenamebase;
     
@@ -9,7 +10,7 @@
     }
 
     chdir(INSTALLATION_PATH);
-    $command = "tar -czvf $filename assets/";
+    $command = "tar -czvf $filename assets/rezepte.sqlite3";
     $ex = exec($command);
     if(!$ex){
         die("Unable to execute this command: ".$command);   
@@ -28,5 +29,5 @@
     header('Content-Disposition: attachment; filename="'.$filenamebase.'"');
     echo($content);
     //Delete file afterwards
-    unlink($filename);
+    //unlink($filename);
 ?>

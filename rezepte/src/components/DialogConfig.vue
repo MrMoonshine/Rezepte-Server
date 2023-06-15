@@ -11,18 +11,23 @@
           <div class="mb-3">
             <label for="takeSnapshotButton" class="form-label">Download Snapshot</label>
             <br>
-            <a href="rezepte/dist/snapshot.php" class="btn btn-primary w-100" id="takeSnapshotButton" aria-describedby="takeSnapshotButtonHelp">
+            <a href="assets/rezepte.sqlite3" :download="backupName" class="btn btn-primary w-100" id="takeSnapshotButton" aria-describedby="takeSnapshotButtonHelp">
               Neuer Snapshot 
               <span class="text-primary bg-light rounded-circle font-weight-bold" style="padding: 0px 0.4rem;">&darr;</span>
             </a>
-            <div id="takeSnapshotButtonHelp" class="form-text">Erstellt einen Snapshot, der heruntergeladen werden kann</div>
+            <div id="takeSnapshotButtonHelp" class="form-text">Erstellt einen Snapshot, der heruntergeladen werden kann. (Ohne Rezeptbilder)</div>
           </div>
-          <form>
+          <form @submit="this.applyBackup($event)" :action="dbscript" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-              <label for="formFile" class="form-label">Stapshot Hochladen</label>
-              <input class="form-control" type="file" id="formFile">
+              <label for="formFile" class="form-label">Snapshot Hochladen</label>
+              <input class="form-control" type="file" id="formFile" name="snapshot" accept=".sqlite3,.db">
               <div class="form-text">Aktuelle daten weden durch den hochgeladenen Snapshot ersetzt!</div>
             </div>
+            <ul>
+              <li v-for="log in logs" v-bind:key="log">
+                <b>{{ log.severity }}</b> {{ log.msg }}
+              </li>
+            </ul>
             <input type="submit" class="btn btn-warning w-100" value="Snapshot Einspielen"/>
           </form>         
         </fieldset>
@@ -52,6 +57,8 @@ export default {
       simpleTables: [],
       dbscript: "rezepte/dist/database.php",
       dburl: window.location.protocol + "//" + window.location.hostname + "/rezepte/",
+      backupName: "rezepte.sqlite3",
+      logs: []
     };
   },
   components: {
@@ -60,6 +67,16 @@ export default {
   mounted() {
     this.fetchSimpleTable('allergenes');
     this.fetchSimpleTable('units');
+
+    // Set name for download file
+    let date = new Date();
+    this.backupName = "rezepte-";
+    this.backupName += `${date.getFullYear()}`.padStart(4, "0");
+    this.backupName += "-";
+    this.backupName += `${date.getMonth()}`.padStart(2, "0");
+    this.backupName += "-";
+    this.backupName += `${date.getDate()}`.padStart(2, "0");
+    this.backupName += ".sqlite3";
   },
   methods: {
     showDialog() {
@@ -90,6 +107,29 @@ export default {
       });
       req.open("GET", url.href);
       req.send();
+    },
+    applyBackup(event){
+      //console.log(event);
+      const formData = new FormData(event.target);
+
+      const req = new XMLHttpRequest();
+      const url = new URL(this.dburl + this.dbscript);
+      req.open("POST", url.href);
+      req.addEventListener("load", () => {
+        //console.log(req.responseText);
+        let jobj = JSON.parse(req.responseText);
+        console.log(jobj);
+        if (jobj) {
+          this.logs = jobj.logs;
+          if(this.logs.length == 0){
+            jobj.logs.push({
+              severity: "Info", msg: "Upload OK, Datenbank wurde überschrieben. Reload empfohlen."
+            });
+          }
+        }
+      });
+      req.send(formData);
+      event.preventDefault();
     }
   }
 }

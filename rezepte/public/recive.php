@@ -124,23 +124,19 @@ fclose($file);
 echo "<h2 class='text-success'>Rezept wurde Erfolgreich hinzugefügt</h2>";
 echo("<p>Rezept wurde hier gespeichert: ".$filename."</p>");
 
-require ("bgrec.php");
-$upload_err = uploadFile("bild");
-$upload_err_descr = "";
+require ("uplodad.php");
+$upload_err = uploadFile("bild", "/var/www/Rezepte-Server/assets/images/");
+$upload_err_descr = $upload_err;
 $upload_err_highlight = "table-warning";
 switch($upload_err){
     case UploadError::OK:
-        $upload_err_descr = "OK.";
         $upload_err_highlight = "table-success";
         break;
     case UploadError::ERR_NONE:
-        $upload_err_descr = "Kein Bild.";
         $upload_err_highlight = "";
         break;
-    case UploadError::ERR_DUPLICATE: $upload_err_descr = "Datei existiert bereits"; break;
-    case UploadError::ERR_FILETYPE: $upload_err_descr = "Datei vom falschen Typ"; break;
-    case UploadError::ERR_SIZE: $upload_err_descr = "Dateigröße überschreitet das Limit von ".ini_get("upload_max_filesize")."!"; break;
-    default: $upload_err_descr = "Unbekannter Fehler."; break;
+    default:
+        break;
 }
 
 echo <<<TABLE

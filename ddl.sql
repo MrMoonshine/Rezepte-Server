@@ -59,4 +59,12 @@ INSERT INTO "units" ("name") VALUES ("Prise");
 INSERT INTO "units" ("name") VALUES ("Stück");
 INSERT INTO "units" ("name") VALUES ("Packung");
 INSERT INTO "units" ("name") VALUES ("Häferl");
-INSERT INTO "units" ("name") VALUES ("Noagal");
+/*
+	Create a table to prevent deletion of units.
+	It simply has a foreign key to the units created above.
+*/
+CREATE TABLE "unit_deletion_prevention" (
+	"id"	INTEGER NOT NULL,
+	FOREIGN KEY("id") REFERENCES "units"("id")
+);
+insert into unit_deletion_prevention ("id") select "id" from "units";

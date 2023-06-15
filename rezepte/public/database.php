@@ -92,6 +92,9 @@
                 logInPage("Found ".-$check." less tables than expected. Running DDL statements again!");
                 self::init();
             }
+
+            // Enable verification of Foreign keys.
+            $this->exec("PRAGMA foreign_keys = ON;");
         }
 
         # Checks and verifies all data and runs DDL statements if necesary
@@ -203,7 +206,8 @@
     $db = new Database();
 
     // Useful for debug purposes
-    //logInPage(var_export($_POST, true));    
+    //logInPage(var_export($_POST, true));
+    //logInPage(var_export($_FILES, true)); 
     if(isset($_POST["insert"])){
         // sanitize
         $table = htmlspecialchars($_POST["insert"]);
@@ -242,6 +246,16 @@
         }else{
             logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
         }        
+    }else if(isset($_FILES["snapshot"])){
+        require("upload.php");
+        $err = uploadFile("snapshot", SNAPSHOT_DIR);
+        if($err != UploadError::OK){
+            logInPage($err);
+        }else{
+            $src = SNAPSHOT_DIR.$_FILES["snapshot"]["name"];
+            $dest = ASSET_DIR."rezepte.sqlite3";
+            rename($src, $dest);
+        }
     }
 
     if(isset($_GET["select"])){
