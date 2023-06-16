@@ -67,8 +67,8 @@
             "recipes",
             "units",
             "allergenes",
-            "connection_recipe_ingredients",
-            "connection_recipe_allergenes",
+            "cri",
+            "cra",
             "dishtypes"
         ];
 
@@ -96,6 +96,7 @@
 
             // Enable verification of Foreign keys.
             $this->exec("PRAGMA foreign_keys = ON;");
+            $this->exec('PRAGMA journal_mode = wal;');
         }
 
         # Checks and verifies all data and runs DDL statements if necesary
@@ -174,7 +175,7 @@
             global $answer;
             
             $sql = <<<SQL
-                SELECT "name","id" FROM "$table";
+                SELECT "name","id" FROM "$table" order by id asc;
             SQL;
             $results = $this->query($sql);
             while ($row = $results->fetchArray()) {
@@ -202,17 +203,141 @@
             SQL;
             $this->exec($sql);
         }
+
+        public function stSearch($table, $name, $searchcol = "name"){
+            $sql = <<<SQL
+                SELECT "id" FROM "$table" WHERE "$searchcol" = "$name";
+            SQL;
+            $ret =  $this->db->querySingle($sql);
+            if($ret){
+                return $ret;
+            }else{
+                return -1;
+            }
+        }
+
+        // Makes HTML Special chars only if necessary. Is being used as markdown
+        function sanitize($string){
+            if(
+                strstr(strtoupper($string), "DROP") && strstr($string, ";") ||
+                strstr(strtoupper($string), "DELETE") && strstr($string, ";") ||
+                strstr(strtoupper($string), "<SCRIPT>")
+            ){
+                logInPage("Injection attempt!", Severity::Warning);
+                $warning = "**Dieses Rezept war ein versuch eine Datanbank-Injektion!**\n\n";
+                return $warning.htmlspecialchars($string);
+            }
+
+            return $string;
+        }
+
+        public function recipeInsert(){
+            if(!isset($_POST["rezeptname"]) || !isset($_POST["zubereitung"])){
+                logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');
+                return -1;
+            }
+            $rezeptname = $this->sanitize($_POST["rezeptname"]);
+            $zubereitung = $this->sanitize($_POST["zubereitung"]);  
+            /*
+                Speiseart
+            */
+            $speiseart = 0;
+            if(isset($_POST["speiseart"])){
+                $speiseart = intval($_POST["speiseart"]);
+            }
+            /*
+                Build Query
+            */
+            $sql = <<<SQL
+                INSERT INTO "recipes"
+                ("title", "text", "dishtype") VALUES
+                ("$rezeptname", "$zubereitung", "$speiseart");
+            SQL;
+            $this->exec($sql);
+            $rid = $this->stSearch("recipes", $rezeptname, "title");
+            //logInPage("Rezept ".$rezeptname." hat die ID: ".$rid);
+            /*
+                Length verification for ingredients
+            */
+            $length = count($_POST["zutat"]);
+            if($length - count($_POST["menge"]) != 0 || $length - count($_POST["einheit"]) != 0){
+                logInPage("Unvollständige Zutaten!", Severity::Critical);
+                return -1;
+            }
+
+            //Clear connecction table before adding
+            $sql = <<<SQL
+                DELETE FROM "cri" WHERE "recipe" = $rid;
+            SQL;
+            $this->exec($sql);
+            // Iterate through all Ingredients
+            for($i = 0; $i < $length; $i++){
+                $zutat = $_POST["zutat"][$i];
+                $menge = $_POST["menge"][$i];
+                $einheit_id = $_POST["einheit"][$i];
+                /*
+                    Neue zudaten mit vorhandenen vergleichen und ggf. hinzufügen
+                */
+                $zutat_id = $this->stSearch("ingredients", $zutat);
+                if($zutat_id < 0){
+                    $this->stInsert("ingredients", $zutat);
+                    $zutat_id = $this->stSearch("ingredients", $zutat);                    
+                }
+
+                $sql = <<< SQL
+                    INSERT INTO "cri"
+                    ("recipe", "ingredient", "amount", "unit") VALUES
+                    ($rid, $zutat_id, $menge, $einheit_id);
+                SQL;
+                $this->exec($sql);
+                //logInPage($_POST["zutat"][$i].", ".$_POST["menge"][$i].", ".$_POST["einheit"][$i]);
+                //logInPage("ID of ".$_POST["zutat"][$i]." is: ".$this->stSearch("ingredients", $_POST["zutat"][$i]));
+            }
+            /*
+                Allergenes
+            */
+            
+            //Clear connection table before adding
+            $sql = <<<SQL
+                DELETE FROM "cra" WHERE "recipe" = $rid;
+            SQL;
+            $this->exec($sql);            
+
+            // Just exit if none are defined
+            if(!isset($_POST["allergenes"])){
+                return 0;
+            }
+            $allergen_count = count($_POST["allergenes"]);
+            // Iterate through all Allegenes
+            for($a = 0; $a < $allergen_count; $a++){
+                $aid = intval($_POST["allergenes"][$a]);
+                if($aid < 1){
+                    continue;
+                }
+                // Add to table
+                $sql = <<<SQL
+                    INSERT INTO "cra"
+                    ("recipe", "allergene") VALUES
+                    ($rid, $aid);
+                SQL;
+                //logInPage($sql);
+                $this->exec($sql);
+            }
+            return 0;
+        }
     }
 
     $db = new Database();
 
     // Useful for debug purposes
-    //logInPage(var_export($_POST, true));
+    logInPage(var_export($_POST, true));
     //logInPage(var_export($_FILES, true)); 
     if(isset($_POST["insert"])){
         // sanitize
         $table = htmlspecialchars($_POST["insert"]);
-        if(isset($_POST["name"])){
+        if($_POST["insert"] == "recipes" || isset($_POST["rezeptname"])){
+            $db->recipeInsert();
+        }else if(isset($_POST["name"])){
             $value = htmlspecialchars($_POST["name"]);
             switch($table){
                 case "allergenes":
@@ -291,4 +416,5 @@
         header('Content-type: application/json; charset=utf-8');
         echo json_encode($answer);
     }
+    $db->db->close();
 ?>

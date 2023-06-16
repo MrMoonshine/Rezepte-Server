@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS "recipes" (
 	"id"	INTEGER NOT NULL UNIQUE,
-	"title"	TEXT NOT NULL,
+	"title"	TEXT NOT NULL UNIQUE,
 	"text"	INTEGER,
+	"dishtype"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
@@ -29,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "dishtypes" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
-CREATE TABLE IF NOT EXISTS "connection_recipe_ingredients" (
+CREATE TABLE IF NOT EXISTS "cri" (
 	"recipe"	INTEGER NOT NULL,
 	"ingredient"	INTEGER NOT NULL,
 	"amount"	INTEGER NOT NULL,
@@ -39,11 +40,11 @@ CREATE TABLE IF NOT EXISTS "connection_recipe_ingredients" (
 	FOREIGN KEY("unit") REFERENCES "units"("id")
 );
 
-CREATE TABLE IF NOT EXISTS "connection_recipe_allergenes" (
+CREATE TABLE IF NOT EXISTS "cra" (
 	"recipe"	INTEGER NOT NULL,
 	"allergene"	INTEGER NOT NULL,
 	FOREIGN KEY("recipe") REFERENCES "recipes"("id"),
-	FOREIGN KEY("allergene") REFERENCES "allergene"("id")
+	FOREIGN KEY("allergene") REFERENCES "allergenes"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "backup" (

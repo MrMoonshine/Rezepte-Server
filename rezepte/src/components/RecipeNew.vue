@@ -30,15 +30,15 @@
                     </div>
                     <div class="col-auto">
                         <label for="speiseartsel" class="form-label">Speiseart</label>
-                        <input :value="foodtype" class="d-none" type="text" name="speiseart" readonly/>
+                        <input :value="speiseart.id" class="d-none" type="number" name="speiseart" readonly/>
                         <br>
                         <div id="speiseartsel" class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                            <button id="speiseartselmain" type="button" class="btn btn-primary">{{ foodtypedisplay }}</button>
+                            <button id="speiseartselmain" type="button" class="btn btn-primary">{{ speiseart.name }}</button>
                             <div class="btn-group" role="group">
                                 <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                    <button @click="setFoodType" v-for="foodtype_i in simpleTables['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>
+                                    <button @click="speiseart = foodtype_i" v-for="foodtype_i in simpleTables['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>
                                 </div>
                             </div>
                         </div>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="col-auto">
                         <div v-for="allergen in simpleTables['allergenes']" v-bind:key="allergen" class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="allergenes" :id="'allergen' + allergen + 'switch'">
+                            <input class="form-check-input" type="checkbox" :value="allergen.id" name="allergenes[]" :id="'allergen' + allergen.name + 'switch'">
                             <label class="form-check-label" :for="'allergen' + allergen + 'switch'">{{ allergen.name }}</label>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <div class="d-block">
-                    <RecipeNewingredient v-for="ingredient in ingredients" v-bind:key="ingredient" :ingredient="ingredient"/>
+                    <RecipeNewingredient v-for="ingredient in ingredients" v-bind:key="ingredient" :ingredient="ingredient" :units="simpleTables['units']"/>
                 </div>
                 <label class="form-label">Zubereitung <i class="text-secondary">kann Markdown!</i></label>
                 <div>
@@ -139,10 +139,8 @@ export default {
     return {
         show: false,
         edit_mode: false,
+        speiseart: {name: "Auswählen", id: -1},
         ingredients: [],
-        foodtypes: window.foodtypes,
-        foodtype: "",
-        foodtypedisplay:"Auswählen",
         rename: "",
         reamount: 1,
         redescription: "",
@@ -163,13 +161,18 @@ export default {
   props: {
 
   },
-  mounted(){
+  created(){
     this.fetchSimpleTable("units");
     this.fetchSimpleTable("allergenes");
     this.fetchSimpleTable("dishtypes");
+    //console.log(this.simpleTables);
   },
   methods:{
     showDialog(){
+        // If unset, set first element
+        if(this.speiseart.id == -1){
+            this.speiseart = this.simpleTables["dishtypes"][0];
+        }
         this.$refs.dialog.showModal();
     },
     close() {
@@ -178,8 +181,6 @@ export default {
     },
     resetForm(){
         //console.log("Resetting form");
-        this.foodtype = "";
-        this.foodtypedisplay ="Auswählen";
         this.rename = "";
         this.reamount = 1;
         this.redescription = "";
@@ -200,10 +201,6 @@ export default {
     setImageUrlInput(para){
         console.log(para.target.files);
         this.reimgaddr = window.location.protocol + "//" + window.location.hostname + "/rezepte/assets/images/" + para.target.files[0].name;
-    },
-    setFoodType(para){
-        this.foodtype = para.target.innerHTML;
-        this.foodtypedisplay = this.foodtype;
     },
     // Simple table von datenbank holen
     fetchSimpleTable(table) {
@@ -229,16 +226,11 @@ export default {
         const url = new URL(this.dburl + this.dbscript);
         req.open("POST", url.href);
         req.addEventListener("load", () => {
-            //console.log(req.responseText);
+            console.log(req.responseText);
             let jobj = JSON.parse(req.responseText);
             console.log(jobj);
             if (jobj) {
             this.logs = jobj.logs;
-            if(this.logs.length == 0){
-                jobj.logs.push({
-                severity: "Info", msg: "Upload OK, Datenbank wurde überschrieben. Reload empfohlen."
-                });
-            }
             }
         });
         req.send(formData);

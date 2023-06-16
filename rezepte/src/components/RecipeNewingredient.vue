@@ -10,13 +10,13 @@
         </div>
             <div class="d-block">
             <label class="form-label">Einheit</label><br>
-            <input type="text" name="einheit[]" class="d-none" :value="unit" readonly />
+            <input type="number" name="einheit[]" class="d-none" :value="unit.id" readonly />
             <div class="btn-group">
-                <button type="button" class="btn btn-primary">{{ unit }}</button>
+                <button type="button" class="btn btn-primary">{{ unit.name }}</button>
                 <div class="btn-group">
                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"></button>
                     <div class="dropdown-menu dropdown-menu-dark">
-                        <button v-for="unit_t in units_t" v-bind:key="unit_t" @click="setUnit" type="button" class="dropdown-item">{{ unit_t }}</button>
+                        <button v-for="unit_t in units" v-bind:key="unit_t" @click="this.unit = unit_t" type="button" class="dropdown-item">{{ unit_t.name }}</button>
                     </div>
                 </div>
             </div>
@@ -37,8 +37,7 @@ export default {
         show: true,
         name: "",
         amount: 0,
-        unit: "g",
-        units_t: ["g", "kg", "l", "ml", "Esslöffel", "Teelöffel", "Prise", "Stück", "Packung", "Scheibe", "Noagal", "Unbekannt"]
+        unit: {name: "g", id: 1},
     };
   },
   props: {
@@ -46,12 +45,16 @@ export default {
         name: String,
         amount: Number,
         unit: String
-    }
+    },
+    units: Array
   },
   methods:{
-      setUnit(para){
+      setUnit(name, id){
         //console.log(para);
-        this.unit = para.target.innerHTML;
+        this.unit = {
+            name: name,
+            id: id
+        };
       }
   },
   created(){
