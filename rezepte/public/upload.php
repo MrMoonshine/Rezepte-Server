@@ -19,12 +19,11 @@ abstract class UploadMimetype
   // ift = ist-filetype, sft = soll-filetype[UploadMimetype]
   function verfiyMimeType($ift, $sft){
     $matches = 0;
-    foreach($sft as &$ex){
-      if($ex == $ift){
+    for($i = 0; $i < count($sft); $i++){
+      if(strtolower($ift) == strtolower($sft[$i])){
         $matches++;
       }
     }
-    unset($ex);
     return $matches > 0;
   }
 
@@ -59,7 +58,7 @@ abstract class UploadMimetype
     }
 
     // Allow certain file formats
-    if(verfiyMimeType($imageFileType, $mimetype)) {
+    if(1 > verfiyMimeType($imageFileType, $mimetype)) {
       //echo "Sorry, only JPG, JPEG, JFIF, PNG & GIF files are allowed.<br>";
       $upload_err = UploadError::ERR_FILETYPE;
     }

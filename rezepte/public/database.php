@@ -1,5 +1,7 @@
 <?php
     require("config.php");
+    require("upload.php");
+    require("recipe.php");
 
     abstract class Severity{
         const Info = "Info";
@@ -165,7 +167,6 @@
             }
             return 0;
         }
-
         /*
             @brief Queries a simple table witha a name and id columns. Writes selected columns in rows
             @param $table name of the table
@@ -182,7 +183,6 @@
                 array_push($answer["data"], $row);
             }
         }
-
         // Execute a DML on a simple table
         public function stInsert($table, $value){
             if(strlen($value) <= 0){
@@ -232,6 +232,11 @@
         }
 
         public function recipeInsert(){
+            //$ret = recipe_create(ASSET_DIR."Borsch.json");
+            $ret = recipe_create();
+            logInPage(var_export($ret, true));
+            return 0;
+
             if(!isset($_POST["rezeptname"]) || !isset($_POST["zubereitung"])){
                 logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');
                 return -1;
@@ -246,15 +251,53 @@
                 $speiseart = intval($_POST["speiseart"]);
             }
             /*
-                Build Query
+                Zubereitungszeit
+            */
+            $hours = 1;
+            $mins = 0;
+            if(isset($_POST["zubereitungszeit"])){
+                list($hours, $mins) = sscanf($_POST["zubereitungszeit"], "%d:%d");
+            }
+            $mins_total = $hours * 60 + $mins;
+            /*
+                Image
+            */
+            $image = "NULL";
+            logInPage(var_export($_FILES, true));
+            if(isset($_FILES["bild"])){
+                $filename = basename( $_FILES["bild"]["name"]);
+                // upload
+                $err = uploadFile("bild", ASSET_DIR."images/");
+                if($err != UploadError::OK){
+                    logInPage("Fehler beim Hochladen von ".htmlspecialchars($filename)." - ".$err, Severity::Warning);
+                }else if($err == UploadError::ERR_DUPLICATE){
+                    $imgid = $this->stSearch("images", $filename);
+                    if($imgid > 0){
+                        $image = $imgid;
+                    }
+                }else{
+                    // Insert, get ID and set SQL value
+                    $this->stInsert("images",$filename);
+                    $imgid = $this->stSearch("images", $filename);
+                    if($imgid > 0){
+                        $image = $imgid;
+                    }
+                }
+            }
+            /*
+                Build Query & run
             */
             $sql = <<<SQL
                 INSERT INTO "recipes"
-                ("title", "text", "dishtype") VALUES
-                ("$rezeptname", "$zubereitung", "$speiseart");
+                ("title", "text", "dishtype", "time", "image") VALUES
+                ("$rezeptname", "$zubereitung", "$speiseart", $mins_total, $image);
             SQL;
             $this->exec($sql);
             $rid = $this->stSearch("recipes", $rezeptname, "title");
+            if($rid < 0){
+                logInPage("Fehler beim hinzufügen von ".$rezeptname, Severity::Critical);
+                return -1;
+            }
             //logInPage("Rezept ".$rezeptname." hat die ID: ".$rid);
             /*
                 Length verification for ingredients
@@ -379,7 +422,6 @@
             logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
         }        
     }else if(isset($_FILES["snapshot"])){
-        require("upload.php");
         $err = uploadFile("snapshot", SNAPSHOT_DIR);
         if($err != UploadError::OK){
             logInPage($err);

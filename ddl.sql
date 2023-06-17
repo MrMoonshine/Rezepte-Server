@@ -1,9 +1,12 @@
 CREATE TABLE IF NOT EXISTS "recipes" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"title"	TEXT NOT NULL UNIQUE,
-	"text"	INTEGER,
+	"description"	TEXT,
+	"time" INTEGER,
+	"image" INTEGER,
 	"dishtype"	INTEGER,
-	PRIMARY KEY("id" AUTOINCREMENT)
+	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("image") REFERENCES "images"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "ingredients" (
@@ -30,10 +33,16 @@ CREATE TABLE IF NOT EXISTS "dishtypes" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
+CREATE TABLE IF NOT EXISTS "images" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"name"	INTEGER NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
 CREATE TABLE IF NOT EXISTS "cri" (
 	"recipe"	INTEGER NOT NULL,
 	"ingredient"	INTEGER NOT NULL,
-	"amount"	INTEGER NOT NULL,
+	"amount"	REAL NOT NULL,
 	"unit"	INTEGER NOT NULL,
 	FOREIGN KEY("recipe") REFERENCES "recipes"("id"),
 	FOREIGN KEY("ingredient") REFERENCES "ingredients"("id"),
