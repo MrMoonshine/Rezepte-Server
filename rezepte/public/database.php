@@ -184,12 +184,18 @@
             }
         }
         // Execute a DML on a simple table
-        public function stInsert($table, $value){
+        public function stInsert($table, $value, $uniqueign = false){
             if(strlen($value) <= 0){
                 return;
             }
+
+            $ign = "";
+            if($uniqueign){
+                $ign = "or ignore";
+            }
+
             $sql = <<<SQL
-                insert into "$table" ("name") values ("$value");
+                insert $ign into "$table" ("name") values ("$value");
             SQL;
             $this->exec($sql);
         }
@@ -232,56 +238,61 @@
         }
 
         public function recipeInsert(){
-            //$ret = recipe_create(ASSET_DIR."Borsch.json");
-            $ret = recipe_create();
-            logInPage(var_export($ret, true));
-            return 0;
-
             if(!isset($_POST["rezeptname"]) || !isset($_POST["zubereitung"])){
                 logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');
                 return -1;
             }
-            $rezeptname = $this->sanitize($_POST["rezeptname"]);
-            $zubereitung = $this->sanitize($_POST["zubereitung"]);  
+
+            //$ret = recipe_create(ASSET_DIR."Borsch.json");
+            $recipe = recipe_create();
+            logInPage(var_export($recipe, true));
             /*
-                Speiseart
+                Standard Variables
             */
-            $speiseart = 0;
-            if(isset($_POST["speiseart"])){
-                $speiseart = intval($_POST["speiseart"]);
+            $title = $this->sanitize($recipe["title"]);  
+
+            //Validate
+            if(isset($_POST["insert"])){
+                $rid = $this->stSearch("recipes", $title, "title");
+                if($rid > 0){
+                    logInPage("Rezept \"".$title."\" gibt es schon! Abbruch.",Severity::Warning);
+                    return -1;
+                }
             }
-            /*
-                Zubereitungszeit
-            */
-            $hours = 1;
-            $mins = 0;
-            if(isset($_POST["zubereitungszeit"])){
-                list($hours, $mins) = sscanf($_POST["zubereitungszeit"], "%d:%d");
+
+            $description = $this->sanitize($recipe["description"]);
+            // Dishtype
+            $dishtype = 1;
+            if(strlen($recipe["dishtype_search"]) > 0){
+                $dishtype = $this->stSearch("dishtypes", $recipe["dishtype_search"]);
+            }else{
+                $dishtype = $recipe["dishtype"];
             }
-            $mins_total = $hours * 60 + $mins;
+            
+            $time = $recipe["time"];
             /*
                 Image
             */
             $image = "NULL";
-            logInPage(var_export($_FILES, true));
-            if(isset($_FILES["bild"])){
-                $filename = basename( $_FILES["bild"]["name"]);
+            if(strlen($recipe["url"]) > 0){
+                // URL is set
+                $this->stInsert("images", $recipe["url"], true);
+                $imgid = $this->stSearch("images", $recipe["url"]);
+                //logInPage("ID is ".$imgid." for ".$recipe["url"]);
+                if($imgid > 0){
+                    $image = $imgid;
+                }
+            }
+            // full URL. e.g https:// or /bla/bla
+            $furl = str_contains($recipe["url"], "/");
+            //logInPage(var_export($_FILES, true));
+            // Only upload a file if it is a local URL and it exists
+            if(!$furl && isset($_FILES[RECIPE_PF_IMG])){
+                $filename = basename( $_FILES[RECIPE_PF_IMG]["name"]);
                 // upload
-                $err = uploadFile("bild", ASSET_DIR."images/");
+                $err = uploadFile(RECIPE_PF_IMG, ASSET_DIR."images/");
                 if($err != UploadError::OK){
                     logInPage("Fehler beim Hochladen von ".htmlspecialchars($filename)." - ".$err, Severity::Warning);
-                }else if($err == UploadError::ERR_DUPLICATE){
-                    $imgid = $this->stSearch("images", $filename);
-                    if($imgid > 0){
-                        $image = $imgid;
-                    }
-                }else{
-                    // Insert, get ID and set SQL value
-                    $this->stInsert("images",$filename);
-                    $imgid = $this->stSearch("images", $filename);
-                    if($imgid > 0){
-                        $image = $imgid;
-                    }
                 }
             }
             /*
@@ -290,21 +301,12 @@
             $sql = <<<SQL
                 INSERT INTO "recipes"
                 ("title", "text", "dishtype", "time", "image") VALUES
-                ("$rezeptname", "$zubereitung", "$speiseart", $mins_total, $image);
+                ("$title", "$description", "$dishtype", $time, $image);
             SQL;
             $this->exec($sql);
-            $rid = $this->stSearch("recipes", $rezeptname, "title");
+            $rid = $this->stSearch("recipes", $title, "title");
             if($rid < 0){
-                logInPage("Fehler beim hinzufügen von ".$rezeptname, Severity::Critical);
-                return -1;
-            }
-            //logInPage("Rezept ".$rezeptname." hat die ID: ".$rid);
-            /*
-                Length verification for ingredients
-            */
-            $length = count($_POST["zutat"]);
-            if($length - count($_POST["menge"]) != 0 || $length - count($_POST["einheit"]) != 0){
-                logInPage("Unvollständige Zutaten!", Severity::Critical);
+                logInPage("Fehler beim hinzufügen von ".$title, Severity::Critical);
                 return -1;
             }
 
@@ -314,17 +316,25 @@
             SQL;
             $this->exec($sql);
             // Iterate through all Ingredients
+            $length = count($recipe["ingredients"]);
             for($i = 0; $i < $length; $i++){
-                $zutat = $_POST["zutat"][$i];
-                $menge = $_POST["menge"][$i];
-                $einheit_id = $_POST["einheit"][$i];
+                $zutat = $recipe["ingredients"][$i];
                 /*
                     Neue zudaten mit vorhandenen vergleichen und ggf. hinzufügen
                 */
-                $zutat_id = $this->stSearch("ingredients", $zutat);
+                $zutat_id = $this->stSearch("ingredients", $zutat["name"]);
                 if($zutat_id < 0){
-                    $this->stInsert("ingredients", $zutat);
-                    $zutat_id = $this->stSearch("ingredients", $zutat);                    
+                    $this->stInsert("ingredients", $zutat["name"]);
+                    $zutat_id = $this->stSearch("ingredients", $zutat["name"]);                    
+                }
+
+                $menge = $zutat["amount"];
+                // Search if non-numeric
+                $einheit_id = 1;
+                if(is_numeric($zutat["unit"])){
+                    $einheit_id = $zutat["unit"];
+                }else{
+                    $einheit_id = $this->stSearch("units", $zutat["unit"]);         
                 }
 
                 $sql = <<< SQL
@@ -346,14 +356,17 @@
             SQL;
             $this->exec($sql);            
 
-            // Just exit if none are defined
-            if(!isset($_POST["allergenes"])){
-                return 0;
+            // Search if search defined
+            if(count($recipe["allergenes_search"]) > 0){
+                array_push(
+                    $recipe["allergenes"],
+                    $this->stSearch("allergenes", $recipe["allergenes_search"][0])
+                );
             }
-            $allergen_count = count($_POST["allergenes"]);
+            $allergen_count = count($recipe["allergenes"]);
             // Iterate through all Allegenes
             for($a = 0; $a < $allergen_count; $a++){
-                $aid = intval($_POST["allergenes"][$a]);
+                $aid = $recipe["allergenes"][$a];
                 if($aid < 1){
                     continue;
                 }
@@ -373,13 +386,13 @@
     $db = new Database();
 
     // Useful for debug purposes
-    logInPage(var_export($_POST, true));
+    //logInPage(var_export($_POST, true));
     //logInPage(var_export($_FILES, true)); 
     if(isset($_POST["insert"])){
         // sanitize
         $table = htmlspecialchars($_POST["insert"]);
         if($_POST["insert"] == "recipes" || isset($_POST["rezeptname"])){
-            $db->recipeInsert();
+            $answer["statusId"] = $db->recipeInsert();
         }else if(isset($_POST["name"])){
             $value = htmlspecialchars($_POST["name"]);
             switch($table){

@@ -100,3 +100,19 @@ CREATE TABLE "dishtype_deletion_prevention" (
 	FOREIGN KEY("id") REFERENCES "dishtypes"("id")
 );
 insert into dishtype_deletion_prevention ("id") select "id" from "dishtypes";
+/*
+	Views
+*/
+CREATE VIEW IF NOT EXISTS "v_recipe_main"
+AS
+ SELECT recipes.id     AS id,
+       recipes.title  AS title,
+       recipes.time   AS time,
+       recipes.text   AS description,
+       images.NAME    AS image,
+       dishtypes.NAME AS dishtype
+FROM   recipes
+       LEFT JOIN images
+              ON recipes.image = images.id
+       LEFT JOIN dishtypes
+              ON recipes.dishtype = dishtypes.id;  
