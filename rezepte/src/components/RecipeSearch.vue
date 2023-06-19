@@ -34,7 +34,7 @@
                 <AdvancedSearch @advanced-search="(cri) => advanced_search(cri)" />
             </div>
         </div>
-        <PaginationSelection></PaginationSelection>
+        <PaginationSelection total=10 current=4></PaginationSelection>
         <div class="d-block d-print-none">
             <!--Foreach Recipe: Create a selection card-->
             <RecipeCard v-for="recipe in matching_recipes" v-bind:key="recipe" :card="recipe.card_data" @show-recipe="display_match"/>

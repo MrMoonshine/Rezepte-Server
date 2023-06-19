@@ -108,9 +108,11 @@ AS
  SELECT recipes.id     AS id,
        recipes.title  AS title,
        recipes.time   AS time,
-       recipes.text   AS description,
+       recipes.description   AS description,
        images.NAME    AS image,
-       dishtypes.NAME AS dishtype
+       dishtypes.NAME AS dishtype,
+	   dishtypes.id AS dtid,
+	   ROW_NUMBER () OVER ( ORDER BY recipes.title ) rownum
 FROM   recipes
        LEFT JOIN images
               ON recipes.image = images.id

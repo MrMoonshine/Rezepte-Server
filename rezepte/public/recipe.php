@@ -65,6 +65,14 @@ function recipe_create($json_file = "")
         $ret["dishtype_search"] = json_var_safe($jobj->foodtype);
         $ret["time"] = recipe_parse_time(json_var_safe($jobj->estimatedTime, "01:00"));
         $ret["url"] = json_var_safe($jobj->imageurl);
+        foreach($jobj->ingredients as &$ing){
+            array_push($ret["ingredients"], array(
+                "name" => $ing->name,
+                "amount" => $ing->amount,
+                "unit" => $ing->unit
+            ));
+        }
+        unset($ing);
 
         if($jobj->glutenFree){
             array_push($ret["allergenes_search"], "Glutenfrei");
