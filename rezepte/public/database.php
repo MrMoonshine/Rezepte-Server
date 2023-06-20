@@ -272,8 +272,6 @@ class Database
             Standard Variables
         */
         $title = $this->sanitize($recipe["title"]);
-
-
         //Validate
         if (isset($_POST["insert"])) {
             $rid = $this->stSearch("recipes", $title, "title");
@@ -284,6 +282,7 @@ class Database
         }
 
         $description = $this->sanitize($recipe["description"]);
+        $amount = $this->sanitize($recipe["amount"]);
         // Verify
         if (strlen($title) < 1 || strlen($description) < 1) {
             logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');
@@ -328,8 +327,8 @@ class Database
         */
         $sql = <<<SQL
                 INSERT INTO "recipes"
-                ("title", "description", "dishtype", "time", "image") VALUES
-                ("$title", "$description", "$dishtype", $time, $image);
+                ("title", "description", "dishtype", "time", "image", "amount") VALUES
+                ("$title", "$description", "$dishtype", $time, $image, $amount);
             SQL;
         $this->exec($sql);
         $rid = $this->stSearch("recipes", $title, "title");
@@ -369,6 +368,8 @@ class Database
             } else {
                 $einheit_id = $this->stSearch("units", $einheit);
             }
+            // To prevent foreign key errors
+            $einheit_id = abs($einheit_id);
 
             $sql = <<<SQL
                     INSERT INTO "cri"
@@ -445,6 +446,47 @@ class Database
         if (isset($_GET["count"])) {
             return 0;
         }
+
+        if(isset($_GET["id"])){
+            // Query just a single recipe
+            $id = intval($_GET["id"]);
+            $sql = <<<SQL
+                select 
+                    rownum,
+                    id,
+                    title,
+                    amount,
+                    time,
+                    image,
+                    dishtype,
+                    dtid,
+                    description
+                from v_recipe_main
+                where id = $id;
+            SQL;
+
+            $results = $this->query($sql);
+            while ($row = $results->fetchArray()) {
+                array_push($answer["data"], $row);
+            }
+            // if select wa ssuccessful
+            if(count($answer["data"]) < 1){
+                logInPage("Rzeept mit ID ".$id." gibt es nich!", Severity::Critical);
+                return -1;
+            }
+            /*
+                Query ingredients
+            */
+            $sql = <<<SQL
+                select * from v_recipe_ingredients where recipe = $id;
+            SQL;
+            $results = $this->query($sql);
+            $answer["data"][0]["ingredients"] = array();
+            while ($row = $results->fetchArray()) {
+                array_push($answer["data"][0]["ingredients"], $row);
+            }
+            return 0;
+        }
         /*
             Filter for Pages
         */
@@ -456,25 +498,40 @@ class Database
             $highlim = $limlow + $items;
             $pagefilter = "rownum > ".$limlow." and rownum <= ".$highlim;
         }
+        /*
+            Filter for Recipe Name
+        */
+        $titlefilter = "1 = 1";
+        if(isset($_GET["title"])){
+            $titlef = htmlspecialchars($_GET["title"]);
+            $titlefilter = 'v_recipe_card.title like "%'.$titlef.'%"';
+        }
 
         // select ROW_NUMBER () OVER ( ORDER BY title ) RowNum,title from v_recipe_main;
+        /*
+            Query for Card view
+        */
         $sql = <<<SQL
-                select 
-                    rownum,
-                    id,
-                    title,
-                    time,
-                    image,
-                    dishtype,
-                    dtid,
-                    substr(description, 0, 100) as description
-                from v_recipe_main
-                where $pagefilter;
-            SQL;
+            select 
+                rownum,
+                id,
+                title,
+                time,
+                image,
+                dishtype,
+                allergenes,
+                description
+            from v_recipe_card
+            where $pagefilter and $titlefilter;
+        SQL;
+
         $results = $this->query($sql);
         while ($row = $results->fetchArray()) {
             array_push($answer["data"], $row);
         }
+        // Count, using the same filter
+        $sql = "select count(1) from v_recipe_card where ".$titlefilter.";";
+        $answer["rownum"] = $this->db->querySingle($sql);
     }
 }
 

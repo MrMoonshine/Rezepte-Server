@@ -4,6 +4,7 @@
       <h2 class="text-primary flex-grow-1">Konfiguration</h2>
       <button @click="close" type="button" class="btn-close mt-2" aria-label="Close"></button>
     </div>
+    <LogList :logs="logs"></LogList>
     <div class="d-flex">
       <div class="d-block">
         <fieldset class="rounded border border-primary p-3 m-2">
@@ -23,13 +24,13 @@
               <input class="form-control" type="file" id="formFile" name="snapshot" accept=".sqlite3,.db">
               <div class="form-text">Aktuelle daten weden durch den hochgeladenen Snapshot ersetzt!</div>
             </div>
-            <ul>
-              <li v-for="log in logs" v-bind:key="log">
-                <b>{{ log.severity }}</b> {{ log.msg }}
-              </li>
-            </ul>
             <input type="submit" class="btn btn-warning w-100" value="Snapshot Einspielen"/>
-          </form>         
+          </form>
+        </fieldset>
+        <fieldset class="rounded border border-primary p-3 m-2">
+          <legend>Legacy JSON Import</legend>   
+          <p>Importiert alle alten JSON Files für Rezepte</p>
+          <button @click="loadLegacy" class="w-100 btn btn-warning">Import JSON</button>
         </fieldset>
         <fieldset class="rounded border border-primary p-3 m-2">
           <DialogConfigminiform title="Allergen" table="allergenes" @configdb-update="this.fetchSimpleTable('allergenes', $event)"
@@ -56,6 +57,8 @@
 </template>
 <script>
 import DialogConfigminiform from './DialogConfigminiform.vue'
+import LogList from './LogList.vue'
+
 export default {
   name: 'DialogConfig',
   data() {
@@ -68,7 +71,8 @@ export default {
     };
   },
   components: {
-    DialogConfigminiform
+    DialogConfigminiform,
+    LogList
   },
   mounted() {
     this.fetchSimpleTable('allergenes');
@@ -76,14 +80,15 @@ export default {
     this.fetchSimpleTable('dishtypes');
 
     // Set name for download file
-    let date = new Date();
+    /*let date = Date.now();
     this.backupName = "rezepte-";
     this.backupName += `${date.getFullYear()}`.padStart(4, "0");
     this.backupName += "-";
     this.backupName += `${date.getMonth()}`.padStart(2, "0");
     this.backupName += "-";
     this.backupName += `${date.getDate()}`.padStart(2, "0");
-    this.backupName += ".sqlite3";
+    this.backupName += ".sqlite3";*/
+    this.backupName = "backup.sqlite3";
   },
   methods: {
     showDialog() {
@@ -138,6 +143,21 @@ export default {
       });
       req.send(formData);
       event.preventDefault();
+    },
+    loadLegacy(){
+      const req = new XMLHttpRequest();
+      const url = new URL(this.dburl + this.dbscript);
+      url.searchParams.append("import", "json");
+      console.log(url);
+      req.addEventListener("load", () => {
+        //console.log(req.responseText);
+        let jobj = JSON.parse(req.responseText);
+        if (jobj) {
+          this.logs = jobj.logs;
+        }
+      });
+      req.open("GET", url.href);
+      req.send();
     }
   }
 }

@@ -10,18 +10,17 @@
           <button v-else @click="submit" type="button" class="btn btn-success"><b>+</b></button>
         </div>
         <div v-if="description" class="form-text">{{description}}</div>
-        <div v-if="showerr" class="form-text text-danger">
-          <ul>
-            <li v-for="log in logs" v-bind:key="log">
-              <b>{{ log.severity }}</b> {{ log.msg }}
-            </li>
-          </ul>
-        </div>
+        <LogList :logs="logs"></LogList>
       </form>
 </template>
 <script>
+    import LogList from './LogList.vue'
+
     export default {
     name: 'DialogConfigminiform',
+    components:{
+      LogList
+    },
     props: {
       title: String,
       table: String,

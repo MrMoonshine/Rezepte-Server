@@ -47,6 +47,7 @@ function recipe_create($json_file = "")
         "description" => "",
         "dishtype" => 1,
         "dishtype_search" => "",
+        "amount" => 0,
         "time" => "",
         "url" => "",
         "ingredients" => [],
@@ -65,6 +66,7 @@ function recipe_create($json_file = "")
         $ret["dishtype_search"] = json_var_safe($jobj->foodtype);
         $ret["time"] = recipe_parse_time(json_var_safe($jobj->estimatedTime, "01:00"));
         $ret["url"] = json_var_safe($jobj->imageurl);
+        $ret["amount"] = json_var_safe($jobj->amount);
         foreach($jobj->ingredients as &$ing){
             array_push($ret["ingredients"], array(
                 "name" => $ing->name,
@@ -85,6 +87,7 @@ function recipe_create($json_file = "")
         //  Set time in minutes
         $ret["time"] = recipe_parse_time(post_var_safe(RECIPE_PV_TIME));
         $ret["url"] = post_var_safe(RECIPE_PV_IMG_URL);
+        $ret["amount"] = post_var_safe("amount", 0);
 
         $lenI = count($_POST[RECIPE_PV_INGREDIENT]);
         $lenA = count($_POST[RECIPE_PV_AMOUNT]);

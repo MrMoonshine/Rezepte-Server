@@ -1,11 +1,11 @@
 <template>
-    <div class="card card-body">
-          <h2>Fortgeschrittene Suche</h2>
+    <form ref="form" class="border">
+          <h2>Suche</h2>
           <p>Jedes Feld was du ausfüllst ist für die Suche relevant. Alle anderen sind egal</p>
           <div class="d-flex flex-wrap justify-content-between gap-2 pb-3 border-bottom">
             <div class="flex-grow-1">
               <label>Name:</label>
-              <input v-model="ing_name" type="search" placeholder="Name" class="form-control border border-primary"/>
+              <input name="title" type="search" placeholder="Name" class="form-control border border-primary"/>
             </div>
             <div class="d-block">
               <label>Speiseart:</label>
@@ -33,17 +33,17 @@
             </div>
             <div>
               <label>Max. Zeit:</label>
-              <input v-model="ing_time" type="time" placeholder="Wie viel Zeit hast du?" class="form-control border border-primary"/>
+              <input name="time" v-model="ing_time" type="time" placeholder="Wie viel Zeit hast du?" class="form-control border border-primary"/>
               <small class="text-danger form-text">Vollständig ausfüllen!</small>
             </div>
           </div>
           <div class="d-flex flex-wrap my-2">
-            <input v-for="i in ing_whitelist.length" v-bind:key="i"  v-model="ing_whitelist[i-1]" type="search" placeholder="Zutat" class="form-control border border-info my-2"/>
+            <input name="ingredient[]" v-for="i in ing_whitelist.length" v-bind:key="i"  v-model="ing_whitelist[i-1]" type="search" placeholder="Zutat" class="form-control border border-info my-2"/>
           </div>
-          <button @click="emit_form" type="button" class="btn btn-success">
+          <button @click="submit" type="button" class="btn btn-success w-100">
             <b>&#x1F50D; Suchen</b>
           </button>
-        </div>
+        </form>
 </template>
 
 <script>
@@ -67,15 +67,15 @@ export default {
         this.ing_whitelist.push("");
         //console.log(this.ing_whitelist);
     },
-    emit_form(){
-      var criteria = {
-        name: this.ing_name,
-        foodtype: this.foodtype,
-        time: this.ing_time,
-        whitelist: this.ing_whitelist,
-        blacklist: []
+    submit(){
+      const formData = new FormData(this.$refs.form);
+      let filter = {
+        title: formData.get("title"),
+        dishtype: formData.get("dishtype"),
+        time: formData.get("time"),
+        ingredients: formData.getAll("ingredient")
       };
-      this.$emit("advanced-search", criteria);
+      this.$emit("filter-update", filter);
     },
     setFoodType(para){
         this.foodtype = para.target.innerHTML;

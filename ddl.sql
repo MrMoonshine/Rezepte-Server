@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS "recipes" (
 	"time" INTEGER,
 	"image" INTEGER,
 	"dishtype"	INTEGER,
+	"amount" INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("image") REFERENCES "images"("id")
 );
@@ -101,13 +102,16 @@ CREATE TABLE "dishtype_deletion_prevention" (
 );
 insert into dishtype_deletion_prevention ("id") select "id" from "dishtypes";
 /*
-	Views
+			V I E W S
+
+	Main base view
 */
 CREATE VIEW IF NOT EXISTS "v_recipe_main"
 AS
  SELECT recipes.id     AS id,
        recipes.title  AS title,
        recipes.time   AS time,
+	   recipes.amount  AS amount,
        recipes.description   AS description,
        images.NAME    AS image,
        dishtypes.NAME AS dishtype,
@@ -117,4 +121,35 @@ FROM   recipes
        LEFT JOIN images
               ON recipes.image = images.id
        LEFT JOIN dishtypes
-              ON recipes.dishtype = dishtypes.id;  
+              ON recipes.dishtype = dishtypes.id;
+/*
+	All relevant Infos for the card view
+*/
+CREATE VIEW IF NOT EXISTS "v_recipe_card" AS
+SELECT    v_recipe_main.rownum                AS rownum,
+          v_recipe_main.id                    AS id,
+          v_recipe_main.title                 AS title,
+          v_recipe_main.dishtype              AS dishtype,
+          v_recipe_main.image                 AS image,
+          v_recipe_main.time                  AS time,
+          substr(description, 0, 100)         AS description,
+          group_concat(allergenes.NAME, ", ") AS allergenes
+FROM      v_recipe_main
+LEFT JOIN cra
+ON        cra.recipe = v_recipe_main.id
+LEFT JOIN allergenes
+ON        cra.allergene = allergenes.id
+GROUP BY  v_recipe_main.id;
+/*
+	Ingredients for a recipe
+*/
+CREATE VIEW IF NOT EXISTS "v_recipe_ingredients" AS
+SELECT    ingredients.name AS name,
+          cri.amount       AS amount,
+          units.name       AS unit,
+		  cri.recipe	   AS recipe
+FROM      cri
+LEFT JOIN ingredients
+ON        cri.ingredient = ingredients.id
+LEFT JOIN units
+ON        cri.unit = units.id;
