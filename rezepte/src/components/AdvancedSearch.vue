@@ -12,14 +12,14 @@
               <br>
               <input :value="foodtype" class="d-none" type="text" name="speiseart" readonly/>
               <div id="speiseartsel" class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                <button id="speiseartselmain" type="button" class="btn btn-primary">{{ foodtypedisplay }}</button>
+                <button id="speiseartselmain" type="button" class="btn btn-primary">{{ dishtype.name }}</button>
                   <div class="btn-group" role="group">
                     <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                     <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                    <button @click="setFoodType" v-for="foodtype_i in foodtypes" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i }}</button>
-                    <span><hr class="dropdown-divider"></span>
-                    <button @click="setFoodType" class="dropdown-item" type="button">Cocktail</button>
+                    <input name="dishtype" :value="dishtype.id"/>
+                    <button @click="dishtype = {name: 'Auswählen', id:-1}" class="dropdown-item" type="button">- ungefiltert -</button>
+                    <button @click="dishtype = foodtype_i" v-for="foodtype_i in metadata['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>                  
                   </div>
                 </div>
               </div>
@@ -33,7 +33,7 @@
             </div>
             <div>
               <label>Max. Zeit:</label>
-              <input name="time" v-model="ing_time" type="time" placeholder="Wie viel Zeit hast du?" class="form-control border border-primary"/>
+              <input name="time" type="time" placeholder="Wie viel Zeit hast du?" class="form-control border border-primary"/>
               <small class="text-danger form-text">Vollständig ausfüllen!</small>
             </div>
           </div>
@@ -52,15 +52,12 @@ export default {
   data(){
     return {
         ing_name: "",
-        ing_time: "",
         ing_whitelist: [],
-        foodtypes: window.foodtypes,
-        foodtype: "",
-        foodtypedisplay:"Auswählen"
+        dishtype: {name: 'Auswählen', id:-1},
     };
   },
   props: {
-
+    metadata: Array
   },
   methods:{
     add_whitelist_input(){
@@ -76,10 +73,6 @@ export default {
         ingredients: formData.getAll("ingredient")
       };
       this.$emit("filter-update", filter);
-    },
-    setFoodType(para){
-        this.foodtype = para.target.innerHTML;
-        this.foodtypedisplay = this.foodtype;
     }
   }
 }

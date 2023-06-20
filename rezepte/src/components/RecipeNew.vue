@@ -38,14 +38,14 @@
                                 <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                    <button @click="speiseart = foodtype_i" v-for="foodtype_i in simpleTables['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>
+                                    <button @click="speiseart = foodtype_i" v-for="foodtype_i in metadata['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>
                                 </div>
                             </div>
                         </div>
                         <div id="speiseartHelp" class="form-text">Wie wird es serviert?</div>
                     </div>
                     <div class="col-auto">
-                        <div v-for="allergen in simpleTables['allergenes']" v-bind:key="allergen" class="form-check form-switch">
+                        <div v-for="allergen in metadata['allergenes']" v-bind:key="allergen" class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" :value="allergen.id" name="allergenes[]" :id="'allergen' + allergen.name + 'switch'">
                             <label class="form-check-label" :for="'allergen' + allergen + 'switch'">{{ allergen.name }}</label>
                         </div>
@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <div class="d-block">
-                    <RecipeNewingredient v-for="ingredient in ingredients" v-bind:key="ingredient" :ingredient="ingredient" :units="simpleTables['units']"/>
+                    <RecipeNewingredient v-for="ingredient in ingredients" v-bind:key="ingredient" :ingredient="ingredient" :units="metadata['units']"/>
                 </div>
                 <label class="form-label">Zubereitung <i class="text-secondary">kann Markdown!</i></label>
                 <div>
@@ -150,28 +150,21 @@ export default {
         logs: [],
         // Database Info
         dbscript: "rezepte/dist/database.php",
-        dburl: window.location.protocol + "//" + window.location.hostname + "/rezepte/",
-        // Verfügbare einheiten, Allergene zum Auswählen
-        simpleTables: [],              
+        dburl: window.location.protocol + "//" + window.location.hostname + "/rezepte/",              
     };
   },
   components:{
     RecipeNewingredient
   },
   props: {
-
-  },
-  created(){
-    this.fetchSimpleTable("units");
-    this.fetchSimpleTable("allergenes");
-    this.fetchSimpleTable("dishtypes");
-    //console.log(this.simpleTables);
+    // Verfügbare einheiten, Allergene zum Auswählen
+    metadata: Array,
   },
   methods:{
     showDialog(){
         // If unset, set first element
         if(this.speiseart.id == -1){
-            this.speiseart = this.simpleTables["dishtypes"][0];
+            this.speiseart = this.metadata["dishtypes"][0];
         }
         this.$refs.dialog.showModal();
     },
@@ -201,23 +194,6 @@ export default {
     setImageUrlInput(para){
         console.log(para.target.files);
         this.reimgaddr = window.location.protocol + "//" + window.location.hostname + "/rezepte/assets/images/" + para.target.files[0].name;
-    },
-    // Simple table von datenbank holen
-    fetchSimpleTable(table) {
-      const req = new XMLHttpRequest();
-      const url = new URL(this.dburl + this.dbscript);
-      url.searchParams.append("select", table);
-      console.log(url);
-      req.addEventListener("load", () => {
-        //console.log(req.responseText);
-        let jobj = JSON.parse(req.responseText);
-        if (jobj) {
-          this.simpleTables[table] = jobj.data;
-          //console.log(this.simpleTables[table]);
-        }
-      });
-      req.open("GET", url.href);
-      req.send();
     },
     submitHandler(event){
         const formData = new FormData(event.target);

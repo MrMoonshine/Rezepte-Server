@@ -1,7 +1,7 @@
 <template>
     <NavBar></NavBar>
     <div class="container">
-        <RecipeNew ref="newform" />
+        <RecipeNew :metadata="metadata" ref="newform" />
         <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
             <!--<DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />-->
             <div class="flex-grow-1 mx-2">
@@ -25,7 +25,7 @@
         <button @click="showDialog" class="btn btn-success w-100 my-3 d-print-none"><b>+</b> Neues Rezept</button>
         <!--Search-->
         <div class="d-block d-print-none mb-3">
-            <AdvancedSearch @filter-update="updateFilter" />
+            <AdvancedSearch :metadata="metadata" @filter-update="updateFilter" />
         </div>
         <p><number>{{ rowcount.toString() }}</number></p>
         <LogList :logs="logs"></LogList>
@@ -78,19 +78,32 @@ export default {
         items: 8,                           // Number of items per page
         page: 0,                            // Number of current page (will be diplayed +1)
         show_delete_modal: false,
-        logs: []                            // Logs from database.php
+        logs: [],                            // Logs from database.php
+        metadata: []                         // Simple tables ot the DB. e.g ingredients, allergenes
     };
   },
   created(){
+    // Initial fetching of items
     this.recipes_get(0, this.items);
+    // Get Metadata
+    this.fetchMetaData("units");
+    this.fetchMetaData("allergenes");
+    this.fetchMetaData("dishtypes");
   },
   methods:{
     // Queries database to count all recipes
-    recipes_get(page, items){
+    recipes_get(page, items, filter = null){
         const url = new URL(DB_URL);
         url.searchParams.append("select", "recipes");
         url.searchParams.append("page", page);
         url.searchParams.append("items", items);
+        // Appy filters
+        if(filter){
+            if(filter.title){
+                url.searchParams.append("title", filter.title);
+            }
+        }
+
         const req = new XMLHttpRequest();
         req.open("POST", url.href);
         req.addEventListener("load", () => {
@@ -113,9 +126,8 @@ export default {
     },
     updateFilter(filter){
         console.log("Updating filter");
-        this.filter = filter;
-        console.log(this.filter);
-        
+        console.log(filter);
+        this.recipes_get(0, this.items, filter);
     },
     // show a recipe
     showRecipe(id){
@@ -169,7 +181,24 @@ export default {
     },
     showDialog(){
         this.$refs.newform.showDialog();
-    }
+    },
+    // Simple table von datenbank holen
+    fetchMetaData(table) {
+      const req = new XMLHttpRequest();
+      const url = new URL(DB_URL);
+      url.searchParams.append("select", table);
+      console.log(url);
+      req.addEventListener("load", () => {
+        //console.log(req.responseText);
+        let jobj = JSON.parse(req.responseText);
+        if (jobj) {
+          this.metadata[table] = jobj.data;
+          //console.log(this.metadata[table]);
+        }
+      });
+      req.open("GET", url.href);
+      req.send();
+    },
   }
 }
 </script>

@@ -531,7 +531,7 @@ class Database
         }
         // Count, using the same filter
         $sql = "select count(1) from v_recipe_card where ".$titlefilter.";";
-        $answer["rownum"] = $this->db->querySingle($sql);
+        $answer["rowcount"] = $this->db->querySingle($sql);
     }
 }
 
