@@ -45,7 +45,8 @@
                         <div id="speiseartHelp" class="form-text">Wie wird es serviert?</div>
                     </div>
                     <div class="col-auto">
-                        <div v-for="allergen in metadata['allergenes']" v-bind:key="allergen" class="form-check form-switch">
+                        <label for="allergensel" class="form-label">Allergene</label>
+                        <div id="allergensel" v-for="allergen in metadata['allergenes']" v-bind:key="allergen" class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" :value="allergen.id" name="allergenes[]" :id="'allergen' + allergen.name + 'switch'">
                             <label class="form-check-label" :for="'allergen' + allergen + 'switch'">{{ allergen.name }}</label>
                         </div>

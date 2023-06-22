@@ -22,11 +22,11 @@
                 </div>
             </div>
         </div>
-        <button @click="showDialog" class="btn btn-success w-100 my-3 d-print-none"><b>+</b> Neues Rezept</button>
         <!--Search-->
         <div class="d-block d-print-none mb-3">
             <AdvancedSearch :metadata="metadata" @filter-update="updateFilter" />
         </div>
+        <button @click="showDialog" class="btn btn-success w-100 my-2 d-print-none"><b>+</b> Neues Rezept</button>
         <p><number>{{ rowcount.toString() }}</number></p>
         <LogList :logs="logs"></LogList>
         <PaginationSelection @page-update="pageUpdate" :total="Math.ceil(rowcount / items)" :current="page"></PaginationSelection>
