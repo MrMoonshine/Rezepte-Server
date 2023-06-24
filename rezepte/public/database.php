@@ -436,6 +436,8 @@ class Database
     public function recipeQuery()
     {
         global $answer;
+        // Set order
+        $order = "title";
 
         $sql = "select count(1) from recipes;";
         $rowcount = $this->db->querySingle($sql);
@@ -506,14 +508,73 @@ class Database
             $titlef = htmlspecialchars($_GET["title"]);
             $titlefilter = 'v_recipe_card.title like "%'.$titlef.'%"';
         }
-
+        /*
+            Filter for dishtype
+        */
+        $dishtypefilter = "1 = 1";
+        if(isset($_GET["dishtype"])){
+            $dishtypef = intval($_GET["dishtype"]);
+            $dishtypefilter = 'v_recipe_card.dtid = '.$dishtypef;
+        }
+        /*
+            Ingredient Filter
+        */
+        $ingredientfilter = "1 = 1";
+        if(isset($_GET["ingredients"])){
+            $len = count($_GET["ingredients"]);
+            if($len > 0){
+                $ingredientfilter = "";
+            }
+            for($a = 0; $a < $len; $a++){
+                if($a != 0){
+                    $ingredientfilter .= " and ";
+                }
+                $iname = htmlspecialchars($_GET["ingredients"][$a]);
+                $ingredientfilter .= <<<SQL
+                    EXISTS(
+                        select * from v_recipe_ingredients
+                        where v_recipe_ingredients.recipe = v_recipe_card.id
+                        and v_recipe_ingredients.name like "%$iname%"
+                    )
+                SQL;
+            }
+        }
+        /*
+            Allergene Filter
+        */
+        $allergenefilter = "1 = 1";
+        if(isset($_GET["allergenes"])){
+            $len = count($_GET["allergenes"]);
+            if($len > 0){
+                $allergenefilter = "";
+            }
+            for($a = 0; $a < $len; $a++){
+                if($a != 0){
+                    $allergenefilter .= " and ";
+                }
+                $aid = intval($_GET["allergenes"][$a]);
+                $allergenefilter .= <<<SQL
+                    EXISTS(
+                        select * from cra where cra.recipe = v_recipe_card.id and cra.allergene = $aid
+                    )
+                SQL;
+            }
+        }
+        /*
+            Filter for estimated time
+        */
+        $timefilter = "1 = 1";
+        if(isset($_GET["time"])){
+            $time = intval($_GET["time"]);
+            $timefilter = "v_recipe_card.time <= ".$time;
+        }
         // select ROW_NUMBER () OVER ( ORDER BY title ) RowNum,title from v_recipe_main;
         /*
             Query for Card view
         */
         $sql = <<<SQL
             select 
-                rownum,
+                ROW_NUMBER() OVER (ORDER BY $order) rownum,
                 id,
                 title,
                 time,
@@ -522,16 +583,38 @@ class Database
                 allergenes,
                 description
             from v_recipe_card
-            where $pagefilter and $titlefilter;
+            where $titlefilter
+            and $dishtypefilter
+            and $ingredientfilter
+            and $allergenefilter
+            and $timefilter
+            group by v_recipe_card.id
         SQL;
 
-        $results = $this->query($sql);
+        //logInPage($sql);
+
+        $pagesql = <<<SQL
+            with pagedcte as(
+                $sql
+            )select * from pagedcte
+            where $pagefilter;
+        SQL;
+
+        $results = $this->query($pagesql);
+        if(!$results){
+            logInPage("Failed to execute this query: ".$pagesql . " Error was: ".$this->db->lastErrorMsg(), Severity::Critical);
+            return -1;
+        }
         while ($row = $results->fetchArray()) {
             array_push($answer["data"], $row);
         }
-        // Count, using the same filter
-        $sql = "select count(1) from v_recipe_card where ".$titlefilter.";";
-        $answer["rowcount"] = $this->db->querySingle($sql);
+        // Count, using the same filter. It is necessary to do it as cte because of the group by statement
+        $pagesql = <<<SQL
+            with countcte as(
+                $sql
+            )select count(1) from countcte;
+        SQL;
+        $answer["rowcount"] = $this->db->querySingle($pagesql);
     }
 }
 
@@ -540,6 +623,7 @@ $simple_tables = ["allergenes", "units", "dishtypes"];
 
 // Useful for debug purposes
 //logInPage(var_export($_POST, true));
+//logInPage(var_export($_GET, true));
 //logInPage(var_export($_FILES, true)); 
 if (isset($_POST["insert"])) {
     // sanitize

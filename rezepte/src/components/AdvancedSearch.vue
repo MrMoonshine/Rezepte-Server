@@ -2,7 +2,7 @@
     <form ref="form" class="p-2 my-2 border rounded">
           <h2>Suche</h2>
           <p>Jedes Feld was du ausfüllst ist für die Suche relevant. Alle anderen sind egal</p>
-          <div class="d-block pb-3 border-bottom">
+          <div class="d-block pb-1">
             <label>Name:</label>
             <div class="input-group">
               <input name="title" type="search" placeholder="Name" class="form-control border border-primary"/>
@@ -10,12 +10,12 @@
             </div>
           </div>
           <div class="collapse" id="adv-search-form">
-            <div class="card card-body">
-              <div class="d-flex justify-content-between gap-3 my-2">
+            <div class="card card-body my-2 p-2">
+              <div class="d-flex justify-content-between gap-3">
                 <div class="d-block flex-grow-1">
                   <label for="ingfil" class="form-label">Zutatenfilter</label>
                   <div v-for="i in ing_whitelist.length" v-bind:key="i" class="input-group my-1" id="ingfil">
-                    <input name="ingredient[]" v-model="ing_whitelist[i - 1]" type="search" placeholder="Zutat" class="form-control border border-info" autocomplete="off"/>
+                    <input name="ingredients[]" v-model="ing_whitelist[i - 1]" type="search" placeholder="Zutat" class="form-control border border-info" autocomplete="off"/>
                     <button @click="this.delete_ing_wl(i - 1)" type="button" class="btn btn-danger"><b>-</b></button>
                   </div>
                   <button @click="add_whitelist_input" type="button" class="btn btn-info my-1 w-100">
@@ -85,12 +85,24 @@ export default {
     },
     submit(){
       const formData = new FormData(this.$refs.form);
+      // Convert time into minutes first
+      let timestr = formData.get("time");
+      let time = 0;
+      if(timestr.length > 0){
+        let a = timestr.split(":");
+        if(a.length > 1){
+          time = parseInt(a[0]) * 60 + parseInt(a[1]);
+        }
+      }
+      //console.log(formData);
       let filter = {
         title: formData.get("title"),
         dishtype: formData.get("dishtype"),
-        time: formData.get("time"),
-        ingredients: formData.getAll("ingredient")
+        time: time,
+        allergenes: formData.getAll("allergenes[]"),
+        ingredients: formData.getAll("ingredients[]")
       };
+      //console.log(filter);
       this.$emit("filter-update", filter);
     }
   }

@@ -162,7 +162,10 @@ export default {
     metadata: Array,
   },
   methods:{
-    showDialog(){
+    // parameter edit is the object of recipe to edit
+    showDialog(edit = null){
+        this.edit_mode = !!edit;   // convert to bool
+        
         // If unset, set first element
         if(this.speiseart.id == -1){
             this.speiseart = this.metadata["dishtypes"][0];

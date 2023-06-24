@@ -17,7 +17,7 @@
                 <IngredientTable :amount="recipe.amount ?? 1" :ingredients="recipe.ingredients"/>
                 <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                     <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
-                    <button @click="edit_recipe(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
+                    <button @click="showDialog(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
                     <button @click="show_delete_modal = true" class="btn btn-danger flex-fill my-2">Löschen</button>
                 </div>
             </div>
@@ -27,9 +27,15 @@
             <AdvancedSearch :metadata="metadata" @filter-update="updateFilter" />
         </div>
         <button @click="showDialog" class="btn btn-success w-100 my-2 d-print-none"><b>+</b> Neues Rezept</button>
-        <p><number>{{ rowcount.toString() }}</number></p>
+        <p><number>{{ rowcount.toString() }} Suchergebnisse</number></p>
         <LogList :logs="logs"></LogList>
-        <PaginationSelection @page-update="pageUpdate" :total="Math.ceil(rowcount / items)" :current="page"></PaginationSelection>
+        <PaginationSelection
+            v-if="rowcount == 0 || rowcount > items"
+            @page-update="pageUpdate" 
+            :total="Math.ceil(rowcount / items)"
+            :current="page"
+        >
+        </PaginationSelection>
         <div class="d-block d-print-none">
             <!--Foreach Recipe: Create a selection card-->
             <RecipeCard v-for="recipe in recipes" v-bind:key="recipe" :card="recipe" @show-recipe="showRecipe"/>
@@ -73,6 +79,7 @@ export default {
         displayed_recipe: [],
         recipes: [],                        // Recipe data for the cards
         rowcount: 0,                        // Count of all recipes for a given filter
+        filter: null,                       // filter
         matching_recipes: [],
         items_count_select: [16, 32, 64],   // Available items per page setting
         items: 8,                           // Number of items per page
@@ -97,10 +104,32 @@ export default {
         url.searchParams.append("select", "recipes");
         url.searchParams.append("page", page);
         url.searchParams.append("items", items);
-        // Appy filters
+        // alter filter if set
         if(filter){
-            if(filter.title){
-                url.searchParams.append("title", filter.title);
+            this.filter = filter;
+        }
+        // Appy filters
+        if(this.filter){
+            if(this.filter.title){
+                if(this.filter.title.length > 0){
+                    url.searchParams.append("title", this.filter.title);
+                }                
+            }
+            if(this.filter.dishtype > 0){
+                url.searchParams.append("dishtype", this.filter.dishtype);
+            }
+            if(this.filter.time){
+                if(this.filter.time > 0){
+                    url.searchParams.append("time", this.filter.time);
+                }
+            }
+            
+            for(const allergene of this.filter.allergenes){
+                url.searchParams.append("allergenes[]", allergene);
+            }
+
+            for(const ingredient of this.filter.ingredients){
+                url.searchParams.append("ingredients[]", ingredient);
             }
         }
 
