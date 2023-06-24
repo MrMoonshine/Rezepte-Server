@@ -4,6 +4,7 @@ define("RECIPE_PV_TEXT", "zubereitung");
 define("RECIPE_PV_DISHTYPE", "speiseart");
 define("RECIPE_PV_INGREDIENT", "zutat");
 define("RECIPE_PV_AMOUNT", "menge");
+define("RECIPE_PV_AMOUNT_PERSONS", "portionen");
 define("RECIPE_PV_UNIT", "einheit");
 define("RECIPE_PV_TIME", "zubereitungszeit");
 define("RECIPE_PV_IMG_URL", "bildURL");
@@ -87,7 +88,7 @@ function recipe_create($json_file = "")
         //  Set time in minutes
         $ret["time"] = recipe_parse_time(post_var_safe(RECIPE_PV_TIME));
         $ret["url"] = post_var_safe(RECIPE_PV_IMG_URL);
-        $ret["amount"] = post_var_safe("amount", 0);
+        $ret["amount"] = post_var_safe(RECIPE_PV_AMOUNT_PERSONS, 0);
 
         $lenI = count($_POST[RECIPE_PV_INGREDIENT]);
         $lenA = count($_POST[RECIPE_PV_AMOUNT]);

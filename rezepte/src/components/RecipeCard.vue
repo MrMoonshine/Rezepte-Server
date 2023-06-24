@@ -10,7 +10,7 @@
             <p>{{ card.description }}...</p>
         </div>
         <div class="d-flex flex-wrap align-items-center h-100 mw-25">
-            <img :src="card.image" alt="Bildchen" @error="imgerr" class="w-100 m-auto img-responsive rounded"/>
+            <img :src="srcFix(card.image)" alt="Bildchen" @error="imgerr" class="w-100 m-auto img-responsive rounded"/>
         </div>
     </div>
 </template>
@@ -35,6 +35,17 @@ export default {
   methods:{
     imgerr(para){
         para.target.className = "d-none";
+    },
+    // helps to show image, where the local path has been omitted
+    srcFix(src){
+        if(!src){
+            return src;
+        }
+
+        if(src.includes("/")){
+            return src;
+        }
+        return "/rezepte/assets/images/" + src;
     },
     badges(rec){
         let ret = [];

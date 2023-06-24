@@ -272,12 +272,20 @@ class Database
             Standard Variables
         */
         $title = $this->sanitize($recipe["title"]);
+        $edit_mode = false;
+        if(isset($_POST["edit"])){
+            $edit_mode = intval($_POST["edit"]) > 0;
+        }
         //Validate
         if (isset($_POST["insert"])) {
             $rid = $this->stSearch("recipes", $title, "title");
             if ($rid > 0) {
-                logInPage("Rezept \"" . $title . "\" gibt es schon! Abbruch.", Severity::Warning);
-                return -1;
+                if($edit_mode){
+                    $this->recipeDelete($rid);
+                }else{
+                    logInPage("Rezept \"" . $title . "\" gibt es schon! Abbruch.", Severity::Warning);
+                    return -1;
+                }
             }
         }
 
@@ -317,9 +325,11 @@ class Database
         if (!$furl && isset($_FILES[RECIPE_PF_IMG])) {
             $filename = basename($_FILES[RECIPE_PF_IMG]["name"]);
             // upload
-            $err = uploadFile(RECIPE_PF_IMG, ASSET_DIR . "images/");
-            if ($err != UploadError::OK) {
-                logInPage("Fehler beim Hochladen von " . htmlspecialchars($filename) . " - " . $err, Severity::Warning);
+            if(strlen($filename) > 0){
+                $err = uploadFile(RECIPE_PF_IMG, ASSET_DIR . "images/");
+                if ($err != UploadError::OK) {
+                    logInPage("Fehler beim Hochladen von " . htmlspecialchars($filename) . " - " . $err, Severity::Warning);
+                }
             }
         }
         /*
@@ -416,6 +426,19 @@ class Database
         return 0;
     }
 
+    function recipeDelete($rid){
+        /*
+            Delete everything related to the recipe
+        */
+        $sql = <<<SQL
+            delete from cra where recipe = $rid;
+            delete from cri where recipe = $rid;
+            delete from recipes where id = $rid;
+        SQL;
+
+        $this->exec($sql);
+    }
+
     public function recipeImportJson()
     {
         $files = scandir(ASSET_DIR);
@@ -487,6 +510,23 @@ class Database
             while ($row = $results->fetchArray()) {
                 array_push($answer["data"][0]["ingredients"], $row);
             }
+            /*
+                Query Allergenes
+            */
+            $sql = <<<SQL
+                select
+                    cra.allergene as id,
+                    allergenes.name as name
+                from cra
+                left join allergenes on allergenes.id = cra.allergene
+                where cra.recipe = $id;
+            SQL;
+            $results = $this->query($sql);
+            $answer["data"][0]["allergenes"] = array();
+            while ($row = $results->fetchArray()) {
+                array_push($answer["data"][0]["allergenes"], $row);
+            }
+
             return 0;
         }
         /*

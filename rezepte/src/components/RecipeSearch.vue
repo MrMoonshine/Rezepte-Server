@@ -1,7 +1,7 @@
 <template>
     <NavBar></NavBar>
     <div class="container">
-        <RecipeNew :metadata="metadata" ref="newform" />
+        <RecipeNew @insert-successful="showInsertedRecipe" :metadata="metadata" ref="newform" />
         <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
             <!--<DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />-->
             <div class="flex-grow-1 mx-2">
@@ -17,7 +17,7 @@
                 <IngredientTable :amount="recipe.amount ?? 1" :ingredients="recipe.ingredients"/>
                 <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                     <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
-                    <button @click="showDialog(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
+                    <button @click="this.showEditDialog(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
                     <button @click="show_delete_modal = true" class="btn btn-danger flex-fill my-2">Löschen</button>
                 </div>
             </div>
@@ -123,19 +123,26 @@ export default {
                     url.searchParams.append("time", this.filter.time);
                 }
             }
-            
-            for(const allergene of this.filter.allergenes){
-                url.searchParams.append("allergenes[]", allergene);
-            }
 
-            for(const ingredient of this.filter.ingredients){
-                url.searchParams.append("ingredients[]", ingredient);
+            if(this.filter.allergenes){
+                for(const allergene of this.filter.allergenes){
+                    url.searchParams.append("allergenes[]", allergene);
+                }
+            }
+            if(this.filter.ingredients){
+                for(const ingredient of this.filter.ingredients){
+                    url.searchParams.append("ingredients[]", ingredient);
+                }
             }
         }
 
         const req = new XMLHttpRequest();
         req.open("POST", url.href);
         req.addEventListener("load", () => {
+        if(req.status != 200){
+            this.logs.push({severity:"Critical",msg:"XHR Error: " + req.status + " " + req.statusText});
+            return;
+        }
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
         console.log(jobj);
@@ -157,6 +164,21 @@ export default {
         console.log("Updating filter");
         console.log(filter);
         this.recipes_get(0, this.items, filter);
+    },
+    // show recipe after a successful insert
+    showInsertedRecipe(title){
+        // clear recipe view to see card immediately
+        this.displayed_recipe = [];
+        // filter for the new/altered recipe via database
+        this.recipes_get(
+            this.page,
+            this.items,
+            {
+                title: title
+            }
+        );
+        // scroll to top
+        window.scrollTo(0, 0);
     },
     // show a recipe
     showRecipe(id){
@@ -209,7 +231,10 @@ export default {
         }
     },
     showDialog(){
-        this.$refs.newform.showDialog();
+        this.$refs.newform.showDialog(null);
+    },
+    showEditDialog(recipe){
+        this.$refs.newform.showDialog(recipe);
     },
     // Simple table von datenbank holen
     fetchMetaData(table) {
