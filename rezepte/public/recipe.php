@@ -36,6 +36,13 @@ function recipe_parse_time($inp)
     return $hours * 60 + $mins;
 }
 
+function recpie_image_fix($url){
+    if(str_contains($url, "://alpakagott")){
+        return basename($url);
+    }
+    return $url;
+}
+
 /*
     @brief Creates a recipe hash to pass on to the database
     @param json_file (optional) path to legacy JSON. Empty string to use POST vars
@@ -66,7 +73,9 @@ function recipe_create($json_file = "")
         $ret["description"] = json_var_safe($jobj->description);
         $ret["dishtype_search"] = json_var_safe($jobj->foodtype);
         $ret["time"] = recipe_parse_time(json_var_safe($jobj->estimatedTime, "01:00"));
-        $ret["url"] = json_var_safe($jobj->imageurl);
+        // Use basename of file to get rid of any lecay URL paths
+        $ret["url"] = recpie_image_fix(json_var_safe($jobj->imageurl));
+        // cycle through all ingredients
         $ret["amount"] = json_var_safe($jobj->amount);
         foreach($jobj->ingredients as &$ing){
             array_push($ret["ingredients"], array(

@@ -3,7 +3,7 @@
     <div class="container">
         <RecipeNew @insert-successful="showInsertedRecipe" :metadata="metadata" ref="newform" />
         <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">
-            <!--<DeleteModal v-if="show_delete_modal" @hide-modal="show_delete_modal = false" :url="recipe.delete_link" :name="recipe.data.title" />-->
+            <DialogDelete @delete-confirm="this.recipes_delete(recipe.id)" :name="recipe.title" ref="deleter" />
             <div class="flex-grow-1 mx-2">
                 <div class="d-flex justify-content-between">
                     <h1 class="flex-grow-1 text-primary">{{ recipe.title }}</h1>
@@ -18,7 +18,7 @@
                 <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                     <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
                     <button @click="this.showEditDialog(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
-                    <button @click="show_delete_modal = true" class="btn btn-danger flex-fill my-2">Löschen</button>
+                    <button @click="showDeleteDialog" class="btn btn-danger flex-fill my-2">Löschen</button>
                 </div>
             </div>
         </div>
@@ -53,7 +53,7 @@ import NavBar from './NavBar.vue'
 import RecipeCard from './RecipeCard.vue'
 import IngredientTable from './IngredientTable.vue'
 import RecipeNew from './RecipeNew.vue'
-//import DeleteModal from './DeleteModal.vue'
+import DialogDelete from './DialogDelete.vue'
 import AdvancedSearch from './AdvancedSearch.vue'
 import PaginationSelection from './PaginationSelection.vue'
 import LogList from './LogList.vue'
@@ -68,7 +68,7 @@ export default {
     RecipeCard,
     IngredientTable,
     RecipeNew,
-    //DeleteModal,
+    DialogDelete,
     AdvancedSearch,
     Markdown,
     PaginationSelection,
@@ -98,6 +98,23 @@ export default {
     this.fetchMetaData("dishtypes");
   },
   methods:{
+    recipes_receive(req, update_rows = false){
+        if(req.status != 200){
+            this.logs.push({severity:"Critical",msg:"XHR Error: " + req.status + " " + req.statusText});
+            return;
+        }
+        //console.log(req.responseText);
+        let jobj = JSON.parse(req.responseText);
+        console.log(jobj);
+        if (jobj) {
+            // Assign data
+            this.logs = jobj.logs ?? [];
+            if(update_rows){
+                this.recipes = jobj.data ?? [];
+                this.rowcount = jobj.rowcount ?? 0;
+            }
+        }
+    },
     // Queries database to count all recipes
     recipes_get(page, items, filter = null){
         const url = new URL(DB_URL);
@@ -139,21 +156,24 @@ export default {
         const req = new XMLHttpRequest();
         req.open("POST", url.href);
         req.addEventListener("load", () => {
-        if(req.status != 200){
-            this.logs.push({severity:"Critical",msg:"XHR Error: " + req.status + " " + req.statusText});
-            return;
-        }
-        //console.log(req.responseText);
-        let jobj = JSON.parse(req.responseText);
-        console.log(jobj);
-        if (jobj) {
-            // Assign data
-            this.rowcount = jobj.rowcount ?? 0;
-            this.recipes = jobj.data ?? [];
-            this.logs = jobj.logs ?? [];
-        }
-      });
+            this.recipes_receive(req, true);
+        });
       req.send();
+    },
+    recipes_delete(id){
+        let formData = new FormData();
+        formData.append("delete", "recipes");
+        formData.append("id", id);
+
+        const url = new URL(DB_URL);
+        const req = new XMLHttpRequest();
+        req.open("POST", url.href);
+        req.addEventListener("load", () => {
+            this.recipes_receive(req);
+        });
+        req.send(formData);
+        // Close recipe view afterwards
+        this.displayed_recipe = [];
     },
     // Helper function to catch emit
     pageUpdate(page){
@@ -193,7 +213,6 @@ export default {
         req.addEventListener("load", () => {
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
-        console.log(jobj);
         if (jobj) {
             // Assign data
             this.displayed_recipe = jobj.data ?? [];
@@ -205,6 +224,12 @@ export default {
                     msg: "Rezept konnte nicht von Datenbank geholt werden!"
                 });
             }
+        }else{
+            this.logs.push({
+              severity: "Critical",
+              msg: "JSON parse fehler!"
+            });
+            console.log(req.responseText);
         }
       });
       req.send();
@@ -236,18 +261,30 @@ export default {
     showEditDialog(recipe){
         this.$refs.newform.showDialog(recipe);
     },
+    showDeleteDialog(){
+        if(this.$refs.deleter.length > 0){
+            this.$refs.deleter[0].showDialog();
+        }else{
+            console.warn("Delete Dialog nicht gefunden und wird nicht geöffnet.");
+        }
+    },
     // Simple table von datenbank holen
     fetchMetaData(table) {
       const req = new XMLHttpRequest();
       const url = new URL(DB_URL);
       url.searchParams.append("select", table);
-      console.log(url);
       req.addEventListener("load", () => {
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
         if (jobj) {
           this.metadata[table] = jobj.data;
           //console.log(this.metadata[table]);
+        }else{
+            this.logs.push({
+              severity: "Critical",
+              msg: "JSON parse fehler!"
+            });
+            console.log(req.responseText);
         }
       });
       req.open("GET", url.href);

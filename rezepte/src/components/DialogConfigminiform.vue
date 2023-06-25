@@ -66,6 +66,10 @@
         url.searchParams.append("select", this.table);
 
         req.addEventListener("load", () =>{
+          if(req.status != 200){
+              this.logs.push({severity:"Critical",msg:"XHR Error: " + req.status + " " + req.statusText});
+              return;
+          }
           /*
               Write all logs into a array. it gets further processed by VUE
           */
@@ -77,6 +81,7 @@
               this.logs.push(log);
               this.showerr = true;
             });
+            console.log(jobj);
           }else{
             this.logs.push({
               severity: "Critical",

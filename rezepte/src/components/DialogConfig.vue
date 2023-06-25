@@ -80,15 +80,10 @@ export default {
     this.fetchSimpleTable('dishtypes');
 
     // Set name for download file
-    /*let date = Date.now();
+    let date = new Date();
     this.backupName = "rezepte-";
-    this.backupName += `${date.getFullYear()}`.padStart(4, "0");
-    this.backupName += "-";
-    this.backupName += `${date.getMonth()}`.padStart(2, "0");
-    this.backupName += "-";
-    this.backupName += `${date.getDate()}`.padStart(2, "0");
-    this.backupName += ".sqlite3";*/
-    this.backupName = "backup.sqlite3";
+    this.backupName += date.toISOString();
+    this.backupName += ".sqlite3";
   },
   methods: {
     showDialog() {
@@ -108,7 +103,7 @@ export default {
       const req = new XMLHttpRequest();
       const url = new URL(this.dburl + this.dbscript);
       url.searchParams.append("select", table);
-      console.log(url);
+      //console.log(url);
       req.addEventListener("load", () => {
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
@@ -131,7 +126,7 @@ export default {
       req.addEventListener("load", () => {
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
-        console.log(jobj);
+        //console.log(jobj);
         if (jobj) {
           this.logs = jobj.logs;
           if(this.logs.length == 0){
@@ -148,7 +143,7 @@ export default {
       const req = new XMLHttpRequest();
       const url = new URL(this.dburl + this.dbscript);
       url.searchParams.append("import", "json");
-      console.log(url);
+      //console.log(url);
       req.addEventListener("load", () => {
         //console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);

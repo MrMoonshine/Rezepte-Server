@@ -98,7 +98,7 @@ class Database
         # Ensure a database exists. If not create one
         if (!file_exists(INSTALLATION_PATH . self::FILE)) {
             $newdb = INSTALLATION_PATH . self::FILE;
-            logInPage("New Database will be created at <code>" . $newdb . "</code>");
+            logInPage("New Database will be created at " . $newdb . "! Please reload this page.", Severity::Warning);
             touch($newdb);
         }
         try {
@@ -220,7 +220,7 @@ class Database
         $sql = <<<SQL
                 insert $ign into "$table" ("name") values ("$value");
             SQL;
-        $this->exec($sql);
+        return $this->exec($sql);
     }
 
     public function stDelete($table, $id)
@@ -436,7 +436,58 @@ class Database
             delete from recipes where id = $rid;
         SQL;
 
-        $this->exec($sql);
+        return $this->exec($sql);
+    }
+
+    function cleanup(){
+        /*
+            Cleanup all files
+        */
+        $sql = <<<SQL
+            SELECT name from images
+            left join recipes on recipes.image = images.id
+            where recipes.image IS NULL
+            AND name not like "%/%";
+        SQL;
+        $results = $this->query($sql);
+        if($results){
+            while ($row = $results->fetchArray()) {
+                $filename = ASSET_DIR.$row["name"];
+                logInPage('Das Bild "'.$filename.'" wird vom Filesystem gelöscht! Es wird in keinem Rezept mehr verwendet.', Severity::Warning);
+                unlink($filename);
+            }
+        }
+        /*
+            Cleanup all orphaned ingredients and images
+        */
+        $sql = <<<SQL
+            --Get rid of all ingredient orphans
+            delete from ingredients
+            where ingredients.id in (
+                select ingredients.id from ingredients
+                left JOIN cri on ingredients.id = cri.ingredient
+                where cri.ingredient IS NULL
+            );
+            --Get rid of all image orphans
+            DELETE from images
+            where id in	(
+                select images.id from images
+                left join recipes on recipes.image = images.id
+                where recipes.image IS NULL
+            );
+        SQL;
+        return $this->exec($sql);
+    }
+
+    public function recipeDeleteClean($rid){
+        if($this->recipeDelete($rid) < 0){
+            logInPage("Failed to delete Recipe with ID " + $rid, Severity::Critical);
+            return -1;
+        }
+        logInPage("Rezept mit ID=".$rid." wurde erfolgreich gelöscht.");
+        // cleanup afterwards
+        $this->cleanup();
+        return 0;
     }
 
     public function recipeImportJson()
@@ -672,19 +723,13 @@ if (isset($_POST["insert"])) {
         $answer["statusId"] = $db->recipeInsert();
     } else if (isset($_POST["name"])) {
         $value = htmlspecialchars($_POST["name"]);
-        switch ($table) {
-            case "allergenes":
-                $db->stInsert($table, $value);
-                break;
-            case "units":
-                $db->stInsert($table, $value);
-                break;
-            case "dishtypes":
-                $db->stDelete($table, $value);
-                break;
-            default:
-                logInPage("Skipping this table with no handler: \"" . $table . "\"");
-                break;
+        /*
+            Handle Data inserion of simple tables
+        */
+        if(matchStrArr($table, $simple_tables)){
+            $db->stInsert($table, $value);
+        }else{
+            logInPage("Skipping this table with no handler: \"" . $table . "\"");
         }
     } else {
         logInPage("Missing \$_POST variable \"name\"", Severity::Critical);
@@ -694,19 +739,15 @@ if (isset($_POST["insert"])) {
     $table = htmlspecialchars($_POST["delete"]);
     if (isset($_POST["id"])) {
         $value = intval($_POST["id"]);
-        switch ($table) {
-            case "allergenes":
-                $db->stDelete($table, $value);
-                break;
-            case "units":
-                $db->stDelete($table, $value);
-                break;
-            case "dishtypes":
-                $db->stDelete($table, $value);
-                break;
-            default:
-                logInPage("Skipping this table with no handler: \"" . $table . "\"");
-                break;
+        /*
+            Handle Data deletion
+        */
+        if(matchStrArr($table, $simple_tables)){
+            $db->stDelete($table, $value);
+        }else if($table == "recipes"){
+            $data["statusId"] = $db->recipeDeleteClean($value);
+        }else{
+            logInPage("Skipping this table with no handler: \"" . $table . "\"");
         }
     } else {
         logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
