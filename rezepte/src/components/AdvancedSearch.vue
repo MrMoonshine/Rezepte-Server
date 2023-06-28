@@ -5,7 +5,7 @@
           <div class="d-block pb-1">
             <label>Name:</label>
             <div class="input-group">
-              <input name="title" type="search" placeholder="Name" class="form-control border border-primary"/>
+              <input name="title" @keypress="submitOnEnter" type="search" placeholder="Name" class="form-control border border-primary"/>
               <button class="input-group-text btn btn-primary dropdown-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#adv-search-form" aria-expanded="false" aria-controls="adv-search-form">Advanced</button>
             </div>
           </div>
@@ -56,9 +56,14 @@
               </div>
             </div>
           </div>
-          <button @click="submit" type="button" class="btn btn-primary w-100">
-            <b>&#x1F50D; Suchen</b>
-          </button>
+          <div class="d-flex gap-2">
+            <button @click="submit('filter-random')" type="button" class="btn btn-secondary w-100">
+              <b> &#x1F3B2; Züfällig</b>
+            </button>
+            <button @click="submit('filter-update')" type="button" class="btn btn-primary w-100">
+              <b>&#x1F50D; Suchen</b>
+            </button>
+          </div>
         </form>
 </template>
 
@@ -83,7 +88,15 @@ export default {
       // delete one element at index
       this.ing_whitelist.splice(i, 1);
     },
-    submit(){
+    // helper function for keypress event on the main search bar
+    // Is does the same as the submit function below
+    submitOnEnter(event){
+      if(event.key === "Enter"){
+        this.submit("filter-update");
+      }
+    },
+    // parameter event is the event being sent out by vue
+    submit(event){
       const formData = new FormData(this.$refs.form);
       // Convert time into minutes first
       let timestr = formData.get("time");
@@ -103,7 +116,7 @@ export default {
         ingredients: formData.getAll("ingredients[]")
       };
       //console.log(filter);
-      this.$emit("filter-update", filter);
+      this.$emit(event, filter);
     }
   }
 }

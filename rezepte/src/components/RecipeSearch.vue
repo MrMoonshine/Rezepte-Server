@@ -24,7 +24,11 @@
         </div>
         <!--Search-->
         <div class="d-block d-print-none mb-3">
-            <AdvancedSearch :metadata="metadata" @filter-update="updateFilter" />
+            <AdvancedSearch
+                :metadata="metadata"
+                @filter-update="updateFilter"
+                @filter-random="randomRecipe"
+            />
         </div>
         <button @click="showDialog" class="btn btn-success w-100 my-2 d-print-none"><b>+</b> Neues Rezept</button>
         <p><number>{{ rowcount.toString() }} Suchergebnisse</number></p>
@@ -80,7 +84,6 @@ export default {
         recipes: [],                        // Recipe data for the cards
         rowcount: 0,                        // Count of all recipes for a given filter
         filter: null,                       // filter
-        matching_recipes: [],
         items_count_select: [16, 32, 64],   // Available items per page setting
         items: 8,                           // Number of items per page
         page: 0,                            // Number of current page (will be diplayed +1)
@@ -116,7 +119,7 @@ export default {
         }
     },
     // Queries database to count all recipes
-    recipes_get(page, items, filter = null){
+    recipes_get(page, items, filter = null, loadend = null){
         const url = new URL(DB_URL);
         url.searchParams.append("select", "recipes");
         url.searchParams.append("page", page);
@@ -158,6 +161,11 @@ export default {
         req.addEventListener("load", () => {
             this.recipes_receive(req, true);
         });
+
+        if(loadend){
+            req.addEventListener("loadend", loadend);
+        }
+
       req.send();
     },
     recipes_delete(id){
@@ -184,6 +192,19 @@ export default {
         console.log("Updating filter");
         console.log(filter);
         this.recipes_get(0, this.items, filter);
+    },
+    randomRecipe(filter){
+        this.logs = [];
+        this.recipes_get(0, this.items, filter, () => {
+            if(this.recipes.length < 1){
+                this.logs.push({severity: "Warning", msg:"Mit diesem Filter gibt es keine Rezepte."});
+                return;
+            }
+            let min = 0, max = this.rowcount;
+            let randid = Math.floor(Math.random() * (max - min) + min);
+            randid = randid % this.recipes.length;
+            this.showRecipe(this.recipes[randid].id);
+        });
     },
     // show recipe after a successful insert
     showInsertedRecipe(title){
