@@ -247,22 +247,6 @@ class Database
         }
     }
 
-    // Makes HTML Special chars only if necessary. Is being used as markdown
-    function sanitize($string)
-    {
-        if (
-            strstr(strtoupper($string), "DROP") && strstr($string, ";") ||
-            strstr(strtoupper($string), "DELETE") && strstr($string, ";") ||
-            strstr(strtoupper($string), "<SCRIPT>")
-        ) {
-            logInPage("Injection attempt!", Severity::Warning);
-            $warning = "**Dieses Rezept war ein versuch eine Datanbank-Injektion!**\n\n";
-            return $warning . htmlspecialchars($string);
-        }
-
-        return $string;
-    }
-
     public function recipeInsert($json_file = "")
     {
         //$ret = recipe_create(ASSET_DIR."Borsch.json");
@@ -271,7 +255,7 @@ class Database
         /*
             Standard Variables
         */
-        $title = $this->sanitize($recipe["title"]);
+        $title = sanitize($recipe["title"]);
         $edit_mode = false;
         if(isset($_POST["edit"])){
             $edit_mode = intval($_POST["edit"]) > 0;
@@ -289,8 +273,8 @@ class Database
             }
         }
 
-        $description = $this->sanitize($recipe["description"]);
-        $amount = $this->sanitize($recipe["amount"]);
+        $description = sanitize($recipe["description"]);
+        $amount = sanitize($recipe["amount"]);
         // Verify
         if (strlen($title) < 1 || strlen($description) < 1) {
             logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');

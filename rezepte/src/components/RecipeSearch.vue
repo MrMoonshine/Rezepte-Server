@@ -85,7 +85,7 @@ export default {
         rowcount: 0,                        // Count of all recipes for a given filter
         filter: null,                       // filter
         items_count_select: [16, 32, 64],   // Available items per page setting
-        items: 8,                           // Number of items per page
+        items: 12,                          // Number of items per page
         page: 0,                            // Number of current page (will be diplayed +1)
         show_delete_modal: false,
         logs: [],                            // Logs from database.php
