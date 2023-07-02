@@ -274,7 +274,7 @@ class Database
         }
 
         $description = sanitize($recipe["description"]);
-        $amount = sanitize($recipe["amount"]);
+        $amount = intval($recipe["amount"]);
         // Verify
         if (strlen($title) < 1 || strlen($description) < 1) {
             logInPage('"rezeptname" oder "zubereitung" nicht gesetzt!');
@@ -295,8 +295,9 @@ class Database
         $image = "NULL";
         if (strlen($recipe["url"]) > 0) {
             // URL is set
-            $this->stInsert("images", $recipe["url"], true);
-            $imgid = $this->stSearch("images", $recipe["url"]);
+            $url = sanitize($recipe["url"]);
+            $this->stInsert("images", $url, true);
+            $imgid = $this->stSearch("images", $url);
             //logInPage("ID is ".$imgid." for ".$recipe["url"]);
             if ($imgid > 0) {
                 $image = $imgid;
@@ -340,10 +341,10 @@ class Database
         $length = count($recipe["ingredients"]);
         //logInPage(var_export($recipe["ingredients"], true));
         for ($i = 0; $i < $length; $i++) {
-            $zutat = $recipe["ingredients"][$i];
-            $name = $zutat["name"];
-            $menge = $zutat["amount"];
-            $einheit = $zutat["unit"];
+            $zutat = sanitize($recipe["ingredients"][$i]);
+            $name = sanitize($zutat["name"]);
+            $menge = floatval($zutat["amount"]);
+            $einheit = sanitize($zutat["unit"]);
 
             /*
                 Neue zudaten mit vorhandenen vergleichen und ggf. hinzufügen

@@ -23,7 +23,7 @@
     </div>
     <div class="d-block">
       <label class="form-label">Einheit</label><br />
-      <input
+      <!--<input
         type="number"
         name="einheit[]"
         class="d-none"
@@ -50,7 +50,8 @@
             </button>
           </div>
         </div>
-      </div>
+      </div>-->
+      <DropdownSelect ref="inputUnit" name="einheit[]" :options="units"></DropdownSelect>
     </div>
     <div class="d-block">
       <label class="form-label">Entfernen</label><br />
@@ -65,14 +66,21 @@
 </template>
 
 <script>
+import DropdownSelect from "./DropdownSelect.vue";
+
+const UNIT_DEFAULT = { name: "g", id: 1 };
+
 export default {
   name: "RecipeNewingredient",
+  components: {
+    DropdownSelect
+  },
   data() {
     return {
       show: true,
       name: "",
       amount: 0,
-      unit: { name: "g", id: 1 },
+      //unit: { name: "g", id: 1 },
     };
   },
   props: {
@@ -84,13 +92,7 @@ export default {
     units: Array,
   },
   methods: {
-    setUnit(name, id) {
-      //console.log(para);
-      this.unit = {
-        name: name,
-        id: id,
-      };
-    },
+
   },
   mounted() {
     // Values, if defined
@@ -102,11 +104,14 @@ export default {
       this.amount = this.ingredient.amount;
     }
 
+    // Default to grams for now
+    this.$refs.inputUnit.setItem(UNIT_DEFAULT);
+
     if (this.ingredient.unit) {
       //cycle through all units, since only names are passed
       for(const u of this.units){
         if(u.name == this.ingredient.unit){
-            this.unit = u;
+            this.$refs.inputUnit.setItem(u);
             break;
         }
       }

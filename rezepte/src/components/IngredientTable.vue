@@ -10,7 +10,7 @@
         <tbody>
             <tr v-for="ingredient in ingredients" v-bind:key="ingredient">
                 <td>{{ ingredient.name }}</td>
-                <td>{{ ingredient.amount * calcfactor}}</td>
+                <td>{{ this.round2(ingredient.amount * calcfactor)}}</td>
                 <td>{{ ingredient.unit }}</td>
             </tr>
         </tbody>
@@ -48,8 +48,12 @@ export default {
     alterAmount(diff){
         if(this.calcamount - (-diff) > 0){
             this.calcamount -= -diff;
-            this.calcfactor = Math.round(100 * this.calcamount / this.amount)/100;
+            this.calcfactor = this.calcamount / this.amount;
         }
+    },
+    // round to 2 digits after comma.
+    round2(value){
+        return Math.round(100 * value)/100;
     }
   },
   created(){
