@@ -154,3 +154,13 @@ LEFT JOIN ingredients
 ON        cri.ingredient = ingredients.id
 LEFT JOIN units
 ON        cri.unit = units.id;
+
+/*
+	Ingredients and Unit relations
+*/
+-- density is in m^3/kg or g/l
+CREATE TABLE IF NOT EXISTS "ingredient_density" (
+	"ingredient"	INTEGER NOT NULL UNIQUE,
+	"density"	REAL NOT NULL,
+	FOREIGN KEY("ingredient") REFERENCES "ingredients"("id")
+);
