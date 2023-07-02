@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS "recipes" (
 	"amount" INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("image") REFERENCES "images"("id")
+	FOREIGN KEY("dishtype") REFERENCES "dishtypes"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "ingredients" (

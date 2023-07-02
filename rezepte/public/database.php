@@ -188,6 +188,16 @@ class Database
         }
         return 0;
     }
+
+    public function universalQuery($sql){
+        # use global var here
+        global $answer;
+
+        $results = $this->query($sql);
+        while ($row = $results->fetchArray()) {
+            array_push($answer["data"], $row);
+        }
+    }
     /*
         @brief Queries a simple table witha a name and id columns. Writes selected columns in rows
         @param $table name of the table
@@ -245,6 +255,39 @@ class Database
         } else {
             return -1;
         }
+    }
+
+    // Ingredient and density table
+    public function densityInsert(){
+        if(!isset($_POST["ingredient"]) || !isset($_POST["density"])){
+            logInPage('$_POST Variable "ingredient" oder "density" nicht gesetzt! Abbruch.', Severity::Critical);
+            return -1;
+        }
+        $ing = sanitize($_POST["ingredient"]);  // ingredient name
+        $density = floatval($_POST["density"]); // density
+        // lookup ingredient ID
+        $ingid = $this->stSearch("ingredients", $ing);
+        if($ingid < 0){
+            $this->stInsert("ingredients", $ing);
+            $ingid = $this->stSearch("ingredients", $ing);
+        }
+        $sql = <<<SQL
+            INSERT INTO "ingredient_density" ("ingredient", "density") VALUES ($ingid, $density);
+        SQL;
+        logInPage($sql);
+        return $this->exec($sql);
+    }
+
+    public function densityQuery(){
+        $sql = <<<SQL
+            select 
+                ingredients.name as name,
+                ingredients.id as id,
+                ingredient_density.density as density
+            from ingredient_density
+            left join ingredients on ingredient_density.ingredient = ingredients.id;
+        SQL;
+        $this->universalQuery($sql);
     }
 
     public function recipeInsert($json_file = "")
@@ -698,7 +741,7 @@ $db = new Database();
 $simple_tables = ["allergenes", "units", "dishtypes"];
 
 // Useful for debug purposes
-//logInPage(var_export($_POST, true));
+logInPage(var_export($_POST, true));
 //logInPage(var_export($_GET, true));
 //logInPage(var_export($_FILES, true)); 
 if (isset($_POST["insert"])) {
@@ -716,12 +759,14 @@ if (isset($_POST["insert"])) {
         }else{
             logInPage("Skipping this table with no handler: \"" . $table . "\"");
         }
-    } else {
+    }else if($_POST["insert"] == "ingredient_density"){
+        $db->densityInsert();
+    }else {
         logInPage("Missing \$_POST variable \"name\"", Severity::Critical);
     }
 } else if (isset($_POST["delete"])) {
     // sanitize
-    $table = htmlspecialchars($_POST["delete"]);
+    $table = sanitize($_POST["delete"]);
     if (isset($_POST["id"])) {
         $value = intval($_POST["id"]);
         /*
@@ -755,7 +800,9 @@ if (isset($_GET["select"])) {
         $db->stQuery($table);
     } else if ($table == "recipes") {
         $db->recipeQuery();
-    } else {
+    } else if ($table == "ingredient_density"){
+        $db->densityQuery();
+    }else {
         logInPage("Skipping this table with no handler: \"" . $table . "\"");
     }
 } else if (isset($_GET["import"])) {
