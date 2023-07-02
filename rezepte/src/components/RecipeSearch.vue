@@ -14,7 +14,7 @@
                     <img :src="this.imgurl(recipe.image)" @error="imgerr" class="float-end h-75 img-responsive rounded w-75" alt="" />
                     <Markdown :source="recipe.description" />
                 </div>
-                <IngredientTable :amount="recipe.amount ?? 1" :ingredients="recipe.ingredients"/>
+                <IngredientTable :amount="recipe.amount ?? 1" :ingredients="recipe.ingredients" :densities="metadata['ingredient_density']"/>
                 <div class="d-flex flex-wrap justify-content-between gap-2 d-print-none">
                     <button @click="printPage" class="btn btn-info w-100 p-2 my-2">Ausdrucken</button>
                     <button @click="this.showEditDialog(recipe)" class="btn btn-warning flex-fill my-2">Bearbeiten</button>
@@ -99,6 +99,8 @@ export default {
     this.fetchMetaData("units");
     this.fetchMetaData("allergenes");
     this.fetchMetaData("dishtypes");
+    this.fetchMetaData("ingredient_density");
+    console.log(this.metadata);
   },
   methods:{
     recipes_receive(req, update_rows = false){

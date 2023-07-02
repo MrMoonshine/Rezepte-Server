@@ -4,14 +4,14 @@
             <tr>
                 <th scope="col">Zutat</th>
                 <th scope="col">Menge</th>
-                <th scope="col">Einheit</th>
+                <th v-if="conversionCount > 0" scope="col">Volumenmaß</th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="ingredient in ingredients" v-bind:key="ingredient">
                 <td>{{ ingredient.name }}</td>
-                <td>{{ this.round2(ingredient.amount * calcfactor)}}</td>
-                <td>{{ ingredient.unit }}</td>
+                <td>{{ this.round2(ingredient.amount * calcfactor)}} {{ ingredient.unit }}</td>
+                <td v-if="conversionCount > 0">{{ this.volumeMeassure(ingredient.amount * calcfactor, ingredient) }}</td>
             </tr>
         </tbody>
     </table>
@@ -32,7 +32,8 @@ export default {
   data(){
     return {
         calcamount: 0,
-        calcfactor: 0
+        calcfactor: 0,
+        conversionCount: 0  // # of possible conversions to volumes
     };
   },
   props: {
@@ -41,8 +42,8 @@ export default {
         amount: Number,
         unit: String
     }],
-    // The amount given in the recipe itself
-    amount: Number
+    amount: Number,         // The amount given in the recipe itself
+    densities: []             // Conversion table vor volume meassures
   },
   methods:{
     alterAmount(diff){
@@ -54,12 +55,60 @@ export default {
     // round to 2 digits after comma.
     round2(value){
         return Math.round(100 * value)/100;
+    },
+    //  amount_i:   calculated amount in mass
+    //  ing_obj:    js object of ingredient
+    volumeMeassure(amount_i, ing_obj){
+        let unit = ing_obj.unit;
+        if(unit != "g" && unit != "kg"){
+            return "";
+        }
+        // mass = volume * density
+        //  m = V * p
+        let amount = amount_i * 1000; // in ml
+        let hasConversion = false;
+        // Multiply by 1000 for kilo to get gramms
+        if(unit == "kg"){
+            amount *= 1000;
+        }
+        // Cycle through options
+        for(const conversion of this.densities){
+            if(conversion.name == ing_obj.name){
+                amount /= conversion.density;
+                hasConversion = true;
+            }
+        }
+        // Return nothing if no conversion is possible
+        if(!hasConversion){
+            return "";
+        }
+        // Submit a rounded result in ml or l
+        if(amount < 1000){
+            return Math.round(amount) + " ml";
+        }else{
+            return Math.round(100*(amount/1000))/100 + " l";
+        }
     }
   },
   created(){
     // Reset amount
     this.calcamount = this.amount;
     this.calcfactor = 1.0;
+
+    // Count conversions to determine if column is necessary
+    this.conversionCount = 0;
+    for(const ingredient of this.ingredients){
+        if(ingredient.unit != "g" && ingredient.unit != "kg"){
+            continue;
+        }
+
+        for(const conversion of this.densities){
+            if(conversion.name != ingredient.name){
+                continue;
+            }
+            this.conversionCount += 1;
+        }
+    }
   }
 }
 </script>

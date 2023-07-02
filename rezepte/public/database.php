@@ -290,7 +290,7 @@ class Database
                 ingredients.id as id,
                 ingredient_density.density as density
             from ingredient_density
-            left join ingredients on ingredient_density.ingredient = ingredients.id;
+            left join ingredients on ingredient_density.ingredient = ingredients.id
         SQL;
         $this->universalQuery($sql);
     }
