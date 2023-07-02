@@ -40,10 +40,12 @@ function logInPage($msg, $severity = Severity::Info)
             break;
     }
 
-    array_push($answer["logs"], array(
-        "severity" => $severity,
-        "msg" => $msg
-    )
+    array_push(
+        $answer["logs"],
+        array(
+            "severity" => $severity,
+            "msg" => $msg
+        )
     );
 
     if (!isset($_GET["mode"])) {
@@ -189,7 +191,8 @@ class Database
         return 0;
     }
 
-    public function universalQuery($sql){
+    public function universalQuery($sql)
+    {
         # use global var here
         global $answer;
 
@@ -258,27 +261,29 @@ class Database
     }
 
     // Ingredient and density table
-    public function densityInsert(){
-        if(!isset($_POST["ingredient"]) || !isset($_POST["density"])){
+    public function densityInsert()
+    {
+        if (!isset($_POST["ingredient"]) || !isset($_POST["density"])) {
             logInPage('$_POST Variable "ingredient" oder "density" nicht gesetzt! Abbruch.', Severity::Critical);
             return -1;
         }
-        $ing = sanitize($_POST["ingredient"]);  // ingredient name
+        $ing = sanitize($_POST["ingredient"]); // ingredient name
         $density = floatval($_POST["density"]); // density
         // lookup ingredient ID
         $ingid = $this->stSearch("ingredients", $ing);
-        if($ingid < 0){
+        if ($ingid < 0) {
             $this->stInsert("ingredients", $ing);
             $ingid = $this->stSearch("ingredients", $ing);
         }
         $sql = <<<SQL
             INSERT INTO "ingredient_density" ("ingredient", "density") VALUES ($ingid, $density);
         SQL;
-        logInPage($sql);
+        //logInPage($sql);
         return $this->exec($sql);
     }
 
-    public function densityQuery(){
+    public function densityQuery()
+    {
         $sql = <<<SQL
             select 
                 ingredients.name as name,
@@ -288,6 +293,20 @@ class Database
             left join ingredients on ingredient_density.ingredient = ingredients.id;
         SQL;
         $this->universalQuery($sql);
+    }
+
+    public function densityDelete()
+    {
+        if(!isset($_POST["ingredient"])){
+            logInPage('$_POST variable "ingredient" has not been set!');
+            return -1;
+        }
+        $id = intval($_POST["ingredient"]);
+        $sql = <<<SQL
+            DELETE FROM ingredient_density where ingredient = $id;
+        SQL;
+        $this->universalQuery($sql);
+        return 0;
     }
 
     public function recipeInsert($json_file = "")
@@ -300,16 +319,16 @@ class Database
         */
         $title = sanitize($recipe["title"]);
         $edit_mode = false;
-        if(isset($_POST["edit"])){
+        if (isset($_POST["edit"])) {
             $edit_mode = intval($_POST["edit"]) > 0;
         }
         //Validate
         if (isset($_POST["insert"])) {
             $rid = $this->stSearch("recipes", $title, "title");
             if ($rid > 0) {
-                if($edit_mode){
+                if ($edit_mode) {
                     $this->recipeDelete($rid);
-                }else{
+                } else {
                     logInPage("Rezept \"" . $title . "\" gibt es schon! Abbruch von Upload.", Severity::Warning);
                     return -1;
                 }
@@ -353,7 +372,7 @@ class Database
         if (!$furl && isset($_FILES[RECIPE_PF_IMG])) {
             $filename = basename($_FILES[RECIPE_PF_IMG]["name"]);
             // upload
-            if(strlen($filename) > 0){
+            if (strlen($filename) > 0) {
                 $err = uploadFile(RECIPE_PF_IMG, ASSET_DIR . "images/");
                 if ($err != UploadError::OK) {
                     logInPage("Fehler beim Hochladen von " . htmlspecialchars($filename) . " - " . $err, Severity::Warning);
@@ -454,7 +473,8 @@ class Database
         return 0;
     }
 
-    function recipeDelete($rid){
+    function recipeDelete($rid)
+    {
         /*
             Delete everything related to the recipe
         */
@@ -467,7 +487,8 @@ class Database
         return $this->exec($sql);
     }
 
-    function cleanup(){
+    function cleanup()
+    {
         /*
             Cleanup all files
         */
@@ -478,10 +499,10 @@ class Database
             AND name not like "%/%";
         SQL;
         $results = $this->query($sql);
-        if($results){
+        if ($results) {
             while ($row = $results->fetchArray()) {
-                $filename = ASSET_DIR.$row["name"];
-                logInPage('Das Bild "'.$filename.'" wird vom Filesystem gelöscht! Es wird in keinem Rezept mehr verwendet.', Severity::Warning);
+                $filename = ASSET_DIR . $row["name"];
+                logInPage('Das Bild "' . $filename . '" wird vom Filesystem gelöscht! Es wird in keinem Rezept mehr verwendet.', Severity::Warning);
                 unlink($filename);
             }
         }
@@ -507,12 +528,13 @@ class Database
         return $this->exec($sql);
     }
 
-    public function recipeDeleteClean($rid){
-        if($this->recipeDelete($rid) < 0){
+    public function recipeDeleteClean($rid)
+    {
+        if ($this->recipeDelete($rid) < 0) {
             logInPage("Failed to delete Recipe with ID " + $rid, Severity::Critical);
             return -1;
         }
-        logInPage("Rezept mit ID=".$rid." wurde erfolgreich gelöscht.");
+        logInPage("Rezept mit ID=" . $rid . " wurde erfolgreich gelöscht.");
         // cleanup afterwards
         $this->cleanup();
         return 0;
@@ -543,7 +565,7 @@ class Database
 
         $sql = "select count(1) from recipes;";
         $rowcount = $this->db->querySingle($sql);
-        if($rowcount){
+        if ($rowcount) {
             $answer["rowcount"] = $rowcount;
         }
         // set this get var to only get the row counter
@@ -551,7 +573,7 @@ class Database
             return 0;
         }
 
-        if(isset($_GET["id"])){
+        if (isset($_GET["id"])) {
             // Query just a single recipe
             $id = intval($_GET["id"]);
             $sql = <<<SQL
@@ -574,8 +596,8 @@ class Database
                 array_push($answer["data"], $row);
             }
             // if select wa ssuccessful
-            if(count($answer["data"]) < 1){
-                logInPage("Rzeept mit ID ".$id." gibt es nich!", Severity::Critical);
+            if (count($answer["data"]) < 1) {
+                logInPage("Rzeept mit ID " . $id . " gibt es nich!", Severity::Critical);
                 return -1;
             }
             /*
@@ -612,40 +634,40 @@ class Database
             Filter for Pages
         */
         $pagefilter = "1 = 1";
-        if(isset($_GET["items"]) && isset($_GET["page"])) {
+        if (isset($_GET["items"]) && isset($_GET["page"])) {
             $items = intval($_GET["items"]);
             $page = intval($_GET["page"]);
             $limlow = $items * $page;
             $highlim = $limlow + $items;
-            $pagefilter = "rownum > ".$limlow." and rownum <= ".$highlim;
+            $pagefilter = "rownum > " . $limlow . " and rownum <= " . $highlim;
         }
         /*
             Filter for Recipe Name
         */
         $titlefilter = "1 = 1";
-        if(isset($_GET["title"])){
+        if (isset($_GET["title"])) {
             $titlef = htmlspecialchars($_GET["title"]);
-            $titlefilter = 'v_recipe_card.title like "%'.$titlef.'%"';
+            $titlefilter = 'v_recipe_card.title like "%' . $titlef . '%"';
         }
         /*
             Filter for dishtype
         */
         $dishtypefilter = "1 = 1";
-        if(isset($_GET["dishtype"])){
+        if (isset($_GET["dishtype"])) {
             $dishtypef = intval($_GET["dishtype"]);
-            $dishtypefilter = 'v_recipe_card.dtid = '.$dishtypef;
+            $dishtypefilter = 'v_recipe_card.dtid = ' . $dishtypef;
         }
         /*
             Ingredient Filter
         */
         $ingredientfilter = "1 = 1";
-        if(isset($_GET["ingredients"])){
+        if (isset($_GET["ingredients"])) {
             $len = count($_GET["ingredients"]);
-            if($len > 0){
+            if ($len > 0) {
                 $ingredientfilter = "";
             }
-            for($a = 0; $a < $len; $a++){
-                if($a != 0){
+            for ($a = 0; $a < $len; $a++) {
+                if ($a != 0) {
                     $ingredientfilter .= " and ";
                 }
                 $iname = htmlspecialchars($_GET["ingredients"][$a]);
@@ -662,13 +684,13 @@ class Database
             Allergene Filter
         */
         $allergenefilter = "1 = 1";
-        if(isset($_GET["allergenes"])){
+        if (isset($_GET["allergenes"])) {
             $len = count($_GET["allergenes"]);
-            if($len > 0){
+            if ($len > 0) {
                 $allergenefilter = "";
             }
-            for($a = 0; $a < $len; $a++){
-                if($a != 0){
+            for ($a = 0; $a < $len; $a++) {
+                if ($a != 0) {
                     $allergenefilter .= " and ";
                 }
                 $aid = intval($_GET["allergenes"][$a]);
@@ -683,9 +705,9 @@ class Database
             Filter for estimated time
         */
         $timefilter = "1 = 1";
-        if(isset($_GET["time"])){
+        if (isset($_GET["time"])) {
             $time = intval($_GET["time"]);
-            $timefilter = "v_recipe_card.time <= ".$time;
+            $timefilter = "v_recipe_card.time <= " . $time;
         }
         // select ROW_NUMBER () OVER ( ORDER BY title ) RowNum,title from v_recipe_main;
         /*
@@ -720,8 +742,8 @@ class Database
         SQL;
 
         $results = $this->query($pagesql);
-        if(!$results){
-            logInPage("Failed to execute this query: ".$pagesql . " Error was: ".$this->db->lastErrorMsg(), Severity::Critical);
+        if (!$results) {
+            logInPage("Failed to execute this query: " . $pagesql . " Error was: " . $this->db->lastErrorMsg(), Severity::Critical);
             return -1;
         }
         while ($row = $results->fetchArray()) {
@@ -741,7 +763,7 @@ $db = new Database();
 $simple_tables = ["allergenes", "units", "dishtypes"];
 
 // Useful for debug purposes
-logInPage(var_export($_POST, true));
+//logInPage(var_export($_POST, true));
 //logInPage(var_export($_GET, true));
 //logInPage(var_export($_FILES, true)); 
 if (isset($_POST["insert"])) {
@@ -754,14 +776,14 @@ if (isset($_POST["insert"])) {
         /*
             Handle Data inserion of simple tables
         */
-        if(matchStrArr($table, $simple_tables)){
+        if (matchStrArr($table, $simple_tables)) {
             $db->stInsert($table, $value);
-        }else{
+        } else {
             logInPage("Skipping this table with no handler: \"" . $table . "\"");
         }
-    }else if($_POST["insert"] == "ingredient_density"){
+    } else if ($_POST["insert"] == "ingredient_density") {
         $db->densityInsert();
-    }else {
+    } else {
         logInPage("Missing \$_POST variable \"name\"", Severity::Critical);
     }
 } else if (isset($_POST["delete"])) {
@@ -772,14 +794,16 @@ if (isset($_POST["insert"])) {
         /*
             Handle Data deletion
         */
-        if(matchStrArr($table, $simple_tables)){
+        if (matchStrArr($table, $simple_tables)) {
             $db->stDelete($table, $value);
-        }else if($table == "recipes"){
+        } else if ($table == "recipes") {
             $data["statusId"] = $db->recipeDeleteClean($value);
-        }else{
+        } else {
             logInPage("Skipping this table with no handler: \"" . $table . "\"");
         }
-    } else {
+    } else if($table == "ingredient_density"){
+        $data["statusId"] = $db->densityDelete();
+    }else {
         logInPage("Missing \$_POST variable \"id\"", Severity::Critical);
     }
 } else if (isset($_FILES["snapshot"])) {
@@ -800,9 +824,9 @@ if (isset($_GET["select"])) {
         $db->stQuery($table);
     } else if ($table == "recipes") {
         $db->recipeQuery();
-    } else if ($table == "ingredient_density"){
+    } else if ($table == "ingredient_density") {
         $db->densityQuery();
-    }else {
+    } else {
         logInPage("Skipping this table with no handler: \"" . $table . "\"");
     }
 } else if (isset($_GET["import"])) {
