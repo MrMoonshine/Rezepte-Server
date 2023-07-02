@@ -267,7 +267,7 @@ class Database
                 if($edit_mode){
                     $this->recipeDelete($rid);
                 }else{
-                    logInPage("Rezept \"" . $title . "\" gibt es schon! Abbruch.", Severity::Warning);
+                    logInPage("Rezept \"" . $title . "\" gibt es schon! Abbruch von Upload.", Severity::Warning);
                     return -1;
                 }
             }

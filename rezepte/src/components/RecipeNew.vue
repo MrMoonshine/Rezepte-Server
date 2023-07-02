@@ -26,7 +26,13 @@
       enctype="multipart/form-data"
     >
       <input name="insert" value="recipes" type="text" class="d-none" />
-      <input v-if="edit_mode" value="1" name="edit" type="text" class="d-none" />
+      <input
+        v-if="edit_mode"
+        value="1"
+        name="edit"
+        type="text"
+        class="d-none"
+      />
       <div class="row gy-2 gx-3 align-items-center">
         <div class="col-auto">
           <label for="rezeptname" class="form-label">Rezeptname</label>
@@ -66,47 +72,13 @@
           </div>
         </div>
         <div class="col-auto">
-          <label for="speiseartsel" class="form-label">Speiseart</label>
-          <input
-            :value="recipe.dtid"
-            class="d-none"
-            type="number"
+          <label class="form-label">Speiseart</label>
+          <DropdownSelect
+            @item-set="setDishtype"
             name="speiseart"
-            readonly
-          />
-          <br />
-          <div
-            id="speiseartsel"
-            class="btn-group"
-            role="group"
-            aria-label="Button group with nested dropdown"
-          >
-            <button id="speiseartselmain" type="button" class="btn btn-primary">
-              {{ recipe.dishtype }}
-            </button>
-            <div class="btn-group" role="group">
-              <button
-                id="btnGroupDrop1"
-                type="button"
-                class="btn btn-primary dropdown-toggle"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-              ></button>
-              <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                <button
-                  @click="this.setDishtype(foodtype_i)"
-                  v-for="foodtype_i in metadata['dishtypes']"
-                  v-bind:key="foodtype_i"
-                  class="dropdown-item"
-                  type="button"
-                >
-                  {{ foodtype_i.name }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div id="speiseartHelp" class="form-text">Wie wird es serviert?</div>
+            :options="metadata['dishtypes']"
+            ref="inputDishtype"
+          ></DropdownSelect>
         </div>
         <div class="col-auto">
           <label for="allergensel" class="form-label">Allergene</label>
@@ -222,34 +194,39 @@
 <script>
 import RecipeNewingredient from "./RecipeNewingredient.vue";
 import LogList from "./LogList.vue";
+import DropdownSelect from "./DropdownSelect.vue";
 
 const EVENT_INSERT_SUCCESSFUL = "insert-successful";
 
-function minutes2time(min_i){
-    // Zubereitungszeit
-    let hours = Math.floor(min_i/60);
-    let mins = min_i % 60;
-    let timestr = "";
-    timestr += hours.toString().padStart(2, "0");
-    timestr += ":";
-    timestr += mins.toString().padStart(2, "0");
-    return timestr;
+function minutes2time(min_i) {
+  // Zubereitungszeit
+  let hours = Math.floor(min_i / 60);
+  let mins = min_i % 60;
+  let timestr = "";
+  timestr += hours.toString().padStart(2, "0");
+  timestr += ":";
+  timestr += mins.toString().padStart(2, "0");
+  return timestr;
 }
 
 const RECIPE_FALLBACK = {
   title: "",
   amount: 1,
   time: "01:00",
-  dishtype: "Auswählen",
-  dtid: -1,
+  dishtype: {id: -1, name: "Auswählen"},
   image: "",
   description: "",
   ingredients: [],
-  allergenes: []
+  allergenes: [],
 };
 
 export default {
   name: "NewRecipe",
+  components: {
+    RecipeNewingredient,
+    LogList,
+    DropdownSelect,
+  },
   data() {
     return {
       recipe: structuredClone(RECIPE_FALLBACK),
@@ -263,10 +240,6 @@ export default {
         "/rezepte/",
     };
   },
-  components: {
-    RecipeNewingredient,
-    LogList,
-  },
   props: {
     // Verfügbare einheiten, Allergene zum Auswählen
     metadata: Array,
@@ -276,6 +249,7 @@ export default {
     showDialog(edit = null) {
       if (edit) {
         this.recipe = edit;
+        this.recipe.dishtype = {id: edit.dtid, name: edit.dishtype};
         //Time is stored in js as hh:mm string
         this.recipe.time = minutes2time(edit.time);
         this.edit_mode = true;
@@ -283,14 +257,15 @@ export default {
         this.recipe = structuredClone(RECIPE_FALLBACK);
         this.edit_mode = false;
       }
-      
-      console.log(this.recipe);
 
       // If unset, set first element
-      if (this.recipe.dtid < 0) {
+      if (this.recipe.dishtype.id < 0) {
         this.setDishtype(this.metadata["dishtypes"][0]);
       }
+      this.$refs.inputDishtype.setItem(this.recipe.dishtype);
       this.$refs.dialog.showModal();
+
+      console.log(this.recipe);
     },
     close() {
       // Raw DOM of dialog must be accessed: therefore the ref attribute is set
@@ -298,18 +273,18 @@ export default {
     },
     // Helper function to set the dishtype via the dropdown
     setDishtype(dt) {
-      this.recipe.dishtype = dt.name ?? "";
-      this.recipe.dtid = dt.id ?? "";
+      this.recipe.dishtype = dt ?? structuredClone(RECIPE_FALLBACK.dishtype);
+      console.log(this.recipe.dishtype);
     },
     //check all allergenes on the recipe if they match the give ID of the checkbox
-    recpieContainsAllergene(id){
-        for(const a of this.recipe.allergenes){
-            if(a.id == id){
-                //console.log("Setting allergene " + id);
-                return true;
-            }
+    recpieContainsAllergene(id) {
+      for (const a of this.recipe.allergenes) {
+        if (a.id == id) {
+          //console.log("Setting allergene " + id);
+          return true;
         }
-        return false;
+      }
+      return false;
     },
     resetForm() {
       this.recipe = structuredClone(RECIPE_FALLBACK);
@@ -335,9 +310,12 @@ export default {
       const url = new URL(this.dburl + this.dbscript);
       req.open("POST", url.href);
       req.addEventListener("load", () => {
-        if(req.status != 200){
-            this.logs.push({severity:"Critical",msg:"XHR Error: " + req.status + " " + req.statusText});
-            return;
+        if (req.status != 200) {
+          this.logs.push({
+            severity: "Critical",
+            msg: "XHR Error: " + req.status + " " + req.statusText,
+          });
+          return;
         }
         console.log(req.responseText);
         let jobj = JSON.parse(req.responseText);
@@ -345,9 +323,16 @@ export default {
         if (jobj) {
           this.logs = jobj.logs;
 
-          if(jobj.statusId >= 0){
+          if (jobj.statusId >= 0) {
             this.$emit(EVENT_INSERT_SUCCESSFUL, this.recipe.title ?? "");
-            this.close();
+            if (this.logs.length < 1) {
+              this.close();
+            } else {
+              this.logs.push({
+                severity: "Info",
+                msg: "Rezept wurde erfolgreich hinzugefügt.",
+              });
+            }
           }
         }
       });

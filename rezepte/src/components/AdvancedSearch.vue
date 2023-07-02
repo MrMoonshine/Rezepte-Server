@@ -23,23 +23,7 @@
                   </button>
                 </div>
                 <div class="d-block filter-col-fixed">
-                  <div class="d-block my-1">
-                    <label>Speiseart:</label>
-                    <br>
-                    <input :value="foodtype" class="d-none" type="text" name="speiseart" readonly/>
-                    <div id="speiseartsel" class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                      <button id="speiseartselmain" type="button" class="btn btn-primary">{{ dishtype.name }}</button>
-                        <div class="btn-group" role="group">
-                          <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle"
-                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                          <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                          <input class="d-none" name="dishtype" :value="dishtype.id"/>
-                          <button @click="dishtype = {name: 'Auswählen', id:-1}" class="dropdown-item" type="button">- ungefiltert -</button>
-                          <button @click="dishtype = foodtype_i" v-for="foodtype_i in metadata['dishtypes']" v-bind:key="foodtype_i" class="dropdown-item" type="button">{{ foodtype_i.name }}</button>                  
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <DropdownSelect name="dishtype" :options="metadata['dishtypes']" unsetstr="- ungefiltert -"></DropdownSelect>
                   <div class="d-block my-1">
                     <label for="allergenfil" class="form-label">Allergene</label>
                     <div id="allergenfil" v-for="allergen in metadata['allergenes']" v-bind:key="allergen" class="form-check form-switch">
@@ -68,9 +52,13 @@
 </template>
 
 <script>
-//var ing_whitelist_counter = 0;
+import DropdownSelect from './DropdownSelect.vue'
+
 export default {
   name: 'AedvancedSearch',
+  components:{
+    DropdownSelect
+  },
   data(){
     return {
         ing_whitelist: [],
