@@ -10,7 +10,8 @@
         <tbody>
             <tr v-for="ingredient in ingredients" v-bind:key="ingredient">
                 <td>{{ ingredient.name }}</td>
-                <td>{{ this.round2(ingredient.amount * calcfactor)}} {{ ingredient.unit }}</td>
+                <!--<td>{{ this.round2(ingredient.amount * calcfactor)}} {{ ingredient.unit }}</td>-->
+                <td>{{this.defaultMeassure(ingredient.amount * calcfactor, ingredient)}}</td>
                 <td v-if="conversionCount > 0">{{ this.volumeMeassure(ingredient.amount * calcfactor, ingredient) }}</td>
             </tr>
         </tbody>
@@ -60,6 +61,26 @@ export default {
     //  ing_obj:    js object of ingredient
     volumeMeassure(amount_i, ing_obj){
         let unit = ing_obj.unit;
+        // If already in liter, check if it can be converted backwards
+        if(unit == "l" || unit == "ml"){
+            let hasConversion = false;
+            for(const conversion of this.densities){
+                if(conversion.name == ing_obj.name){
+                    hasConversion = true;
+                }
+            }
+
+            if(!hasConversion){
+                return "";
+            }
+
+            if(unit == "l"){
+                return this.round2(amount_i) + " " + unit;
+            }else{
+                return Math.round(amount_i) + " " + unit;
+            }            
+        }
+
         if(unit != "g" && unit != "kg"){
             return "";
         }
@@ -86,7 +107,31 @@ export default {
         if(amount < 1000){
             return Math.round(amount) + " ml";
         }else{
-            return Math.round(100*(amount/1000))/100 + " l";
+            return this.round2(amount/1000) + " l";
+        }
+    },
+    defaultMeassure(amount_i, ing_obj){
+        let unit = ing_obj.unit;
+        if((unit != "l" && unit != "ml") || this.densities.length < 1){
+            return this.round2(amount_i) + " " + unit;
+        }
+        let amount = amount_i; // in liters
+        // Multiply by 1000 for kilo to get gramms
+        if(unit == "ml"){
+            amount /= 1000;
+        }
+
+        for(const conversion of this.densities){
+            if(conversion.name == ing_obj.name){
+                amount *= conversion.density;
+            }
+        }
+
+        // Submit a rounded result in g or kg
+        if(amount < 1000){
+            return Math.round(amount) + " g";
+        }else{
+            return this.round2(amount/1000) + " kg";
         }
     }
   },
@@ -98,7 +143,7 @@ export default {
     // Count conversions to determine if column is necessary
     this.conversionCount = 0;
     for(const ingredient of this.ingredients){
-        if(ingredient.unit != "g" && ingredient.unit != "kg"){
+        if(ingredient.unit != "g" && ingredient.unit != "kg" && ingredient.unit != "l" && ingredient.unit != "ml"){
             continue;
         }
 

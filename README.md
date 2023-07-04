@@ -1,5 +1,5 @@
 # Rezepte-Server
-Ein Webserver um Rezepte zu Speichern und Mengen ggf. umzurechenen. 
+Eine Webseite um Rezepte zu Speichern und Mengen ggf. umzurechenen. 
 
 Was kann die Website?
 - Rezepte werden im *Handyformat* angezeigt und können dort umgerechnet werden
@@ -7,19 +7,23 @@ Was kann die Website?
 - Einfache Suche
 - Advanced Suche
   - Dort kann man nach Zutaten, Zubereitungszeit, Speiseart, etc filtern.
+- Masse kann in Volumenmaß (Liter) umgerechnet werden.
+- Zufälliges Rezept für einen Filter
+- Benutzerdefinierte Einheiten, Alergene, Zutat-Dichten können im Config UI konfiguriert werden.
 
 # Backend
 Aus "Ich lerne PHP für die Schule" wird over engineered garbage.
 
 Style wird mit Bootstrap gemacht und das frontend mit VUE.
 
-Rezepte werdein in JSON files gespeichert anstatt einer Datenbank. Da der Server für einen Raspberry Pi konzepiert ist, müssen die Rezepte leicht zum exportieren/importieren sein (Tote SD Katre oder Raspberry passiert schnell ⚰️). Zusätzlich muss man sich nicht um Collations kümmern.
+Rezepte werden in einer SQLite3 Datenbank gespeichert. Backups aufnehmen und einspielen geht über das Config UI im browser.
 
 # Installation
 
 **Was wird benötigt?**
 - Apache Sever mit PHP mod
   - Richtige chmod berechtingungen!
+  - `httpd_sys_rw_content` falls SELinux aktiv ist!
 - vue-cli
 
 Es ist keine weitere HTTP portfreigabe notwendig. Microsegmentierung ist optional.

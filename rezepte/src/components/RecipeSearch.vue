@@ -1,5 +1,5 @@
 <template>
-    <NavBar></NavBar>
+    <NavBar :converterdata="metadata['ingredient_density'] ?? []"></NavBar>
     <div class="container">
         <RecipeNew @insert-successful="showInsertedRecipe" :metadata="metadata" ref="newform" />
         <div v-for="recipe in displayed_recipe" v-bind:key="recipe" class="rezeptanzeige border-bottom d-block d-print-block">

@@ -23,34 +23,6 @@
     </div>
     <div class="d-block">
       <label class="form-label">Einheit</label><br />
-      <!--<input
-        type="number"
-        name="einheit[]"
-        class="d-none"
-        :value="unit.id"
-        readonly
-      />
-      <div class="btn-group">
-        <button type="button" class="btn btn-primary">{{ unit.name }}</button>
-        <div class="btn-group">
-          <button
-            class="btn btn-primary dropdown-toggle"
-            type="button"
-            data-bs-toggle="dropdown"
-          ></button>
-          <div class="dropdown-menu dropdown-menu-dark">
-            <button
-              v-for="unit_t in units"
-              v-bind:key="unit_t"
-              @click="this.unit = unit_t"
-              type="button"
-              class="dropdown-item"
-            >
-              {{ unit_t.name }}
-            </button>
-          </div>
-        </div>
-      </div>-->
       <DropdownSelect ref="inputUnit" name="einheit[]" :options="units"></DropdownSelect>
     </div>
     <div class="d-block">
