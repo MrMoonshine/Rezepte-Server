@@ -9,7 +9,7 @@
             </div>
             <p>{{ card.description }}...</p>
         </div>
-        <div class="d-flex flex-wrap align-items-center h-100 mw-25">
+        <div class="d-flex align-items-center h-100">
             <img :src="srcFix(card.image)" alt="Bildchen" @error="imgerr" class="w-100 m-auto img-responsive rounded"/>
         </div>
     </div>

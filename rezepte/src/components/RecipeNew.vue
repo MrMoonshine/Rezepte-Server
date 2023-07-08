@@ -34,7 +34,7 @@
         class="d-none"
       />
       <div class="row gy-2 gx-3 align-items-center">
-        <div class="col-auto">
+        <div class="flex-grow">
           <label for="rezeptname" class="form-label">Rezeptname</label>
           <input
             type="text"
@@ -61,7 +61,7 @@
             Für wie viele Personen?
           </div>
         </div>
-        <div class="col-auto">
+        <!--<div class="col-auto">
           <label for="newIngredient" class="form-label">Zutaten</label>
           <br />
           <button @click="newIngredient" type="button" class="btn btn-primary">
@@ -70,7 +70,7 @@
           <div id="newIngredientHelp" class="form-text">
             Erweitert die Eingabe
           </div>
-        </div>
+        </div>-->
         <div class="col-auto">
           <label class="form-label">Speiseart</label>
           <DropdownSelect
@@ -115,31 +115,33 @@
           <div id="resetHelp" class="form-text">Ganzes Formular ausleeren</div>
         </div>
       </div>
-      <div class="d-block">
+      <fieldset class="d-block">
+        <legend>Zutaten</legend>
         <RecipeNewingredient
           v-for="ingredient in recipe.ingredients"
           v-bind:key="ingredient"
           :ingredient="ingredient"
           :units="metadata['units']"
         />
-      </div>
-      <label class="form-label"
-        >Zubereitung <i class="text-secondary">kann Markdown!</i></label
-      >
+        <button @click="newIngredient" type="button" class="btn btn-primary w-100 mb-2">
+          <b>+</b> Neue Zutat
+        </button>
+      </fieldset>
+      <label class="form-label">
+        Zubereitung <i class="text-secondary">kann Markdown!</i>
+      </label>
       <div>
-        <div class="form-floating">
           <textarea
             v-model="recipe.description"
             class="form-control border-primary"
             placeholder="Zubereitung"
             spellcheck="true"
             name="zubereitung"
+            rows=8
             required
           ></textarea>
-          <label for="zubereitung">Zubereitung</label>
-        </div>
       </div>
-      <div class="row gy-2 gx-3 align-items-center">
+      <div class="flex-grow row gy-2 gx-3 align-items-center">
         <div class="col-auto">
           <label for="bildURL" class="form-label">Rezeptbild-Addresse</label>
           <input
@@ -356,7 +358,8 @@ export default {
   z-index: 101;
 }
 
-textarea {
-  min-height: 100px;
+textarea{
+  resize: vertical;
+  min-height: 6em;
 }
 </style>

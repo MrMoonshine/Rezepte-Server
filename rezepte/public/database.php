@@ -368,6 +368,7 @@ class Database
         // full URL. e.g https:// or /bla/bla
         $furl = str_contains($recipe["url"], "/");
         //logInPage(var_export($_FILES, true));
+        //logInPage(sanitize($recipe["url"]));
         // Only upload a file if it is a local URL and it exists
         if (!$furl && isset($_FILES[RECIPE_PF_IMG])) {
             $filename = basename($_FILES[RECIPE_PF_IMG]["name"]);

@@ -121,10 +121,17 @@ export default {
             amount /= 1000;
         }
 
+        let hasConversion = false;
+
         for(const conversion of this.densities){
             if(conversion.name == ing_obj.name){
                 amount *= conversion.density;
+                hasConversion = true;
             }
+        }
+
+        if(!hasConversion){
+            return this.round2(amount_i) + " " + unit;
         }
 
         // Submit a rounded result in g or kg
