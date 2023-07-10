@@ -404,7 +404,7 @@ class Database
         $length = count($recipe["ingredients"]);
         //logInPage(var_export($recipe["ingredients"], true));
         for ($i = 0; $i < $length; $i++) {
-            $zutat = sanitize($recipe["ingredients"][$i]);
+            $zutat = $recipe["ingredients"][$i];
             $name = sanitize($zutat["name"]);
             $menge = floatval($zutat["amount"]);
             $einheit = sanitize($zutat["unit"]);
